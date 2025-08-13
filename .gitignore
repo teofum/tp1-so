@@ -1,0 +1,15 @@
+#Binary Files
+*.bin
+*.elf
+*.sys
+
+#Object files
+*.o
+
+#macOS garbage
+.DS_Store
+
+build/
+out/
+
+*.pdf
