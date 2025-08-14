@@ -2,14 +2,17 @@ all: master player view
 
 master: out docker
 	docker exec -it so-builder make all -C /root/master
+	rm -f out/master
 	ln master/out/master out/master
 
 player: out docker
 	docker exec -it so-builder make all -C /root/player
+	rm -f out/player
 	ln player/out/player out/player
 
 view: out docker
 	docker exec -it so-builder make all -C /root/view
+	rm -f out/view
 	ln view/out/view out/view
 
 out:
