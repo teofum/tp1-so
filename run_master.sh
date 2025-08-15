@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker exec -it so-builder /root/out/master
+docker exec -it so-builder /root/out/master "$@"
