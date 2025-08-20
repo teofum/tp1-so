@@ -30,5 +30,7 @@ docker:
 docker_pull:
 	docker pull agodio/itba-so-multi-platform:3.0
 	docker run -d -v "${PWD}:/root" --security-opt seccomp:unconfined -it --name so-builder --platform=linux/amd64 --privileged agodio/itba-so-multi-platform:3.0
+#	docker run -d -v "$(shell pwd):/root" --security-opt seccomp:unconfined -it --name so-builder --platform=linux/amd64 --privileged agodio/itba-so-multi-platform:3.0
+#	tuve que usar este yo _(:v \)/_ (lolo)
 
 .PHONY: master player view
