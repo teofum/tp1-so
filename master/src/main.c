@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     printf("[master] View process exited with code %d\n", ret);
   }
 
-  ///// pipe setup mk1
+  ///// pipe setup mk1 and fork and exec players
 
   int pipesw[2][MAX_PLAYERS]; // un array de pipes de write
   int pipesr[2][MAX_PLAYERS]; // un array de pipes de read
@@ -71,8 +71,10 @@ int main(int argc, char **argv) {
       return -1; // falla el creado del pipe
     }
   }
+
+  printf("[master] Creating player process...\n");
   // a cada player se le manda sus respectivos pipes de read y write
-  char **enviroment; // todo: enviroment variables to pass
+  char **enviroment; // todo: enviroment variables to pass to each player
   int children[MAX_PLAYERS];
   for (int i = 0; args.players[i] != NULL; i++) {
     int pid = fork();
@@ -81,9 +83,12 @@ int main(int argc, char **argv) {
     } // falla el fork
 
     if (!pid) { /// child proces
-      // deberia correr el codigo del player
+      printf("soy child, existo");
       execve("player", args.players, enviroment);
     }
+    int ret;
+    waitpid(pid, &ret, 0);
+    printf("[master] Player{%d} process exited with code %d\n", i, ret);
     children[i] = pid; // parent guarda el pid de los nenes
   }
 
