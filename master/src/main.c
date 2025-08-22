@@ -63,8 +63,8 @@ int main(int argc, char **argv) {
 
   ///// pipe setup mk1
 
-  int pipesw[2][MAX_PLAYERS]; // un array de pipes de read
-  int pipesr[2][MAX_PLAYERS]; // un array de pipes de write
+  int pipesw[2][MAX_PLAYERS]; // un array de pipes de write
+  int pipesr[2][MAX_PLAYERS]; // un array de pipes de read
 
   for (int i = 0; args.players[i] != NULL; i++) {
     if (pipe(pipesw[i]) == -1 || pipe(pipesr[i]) == -1) {
