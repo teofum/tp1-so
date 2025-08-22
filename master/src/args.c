@@ -21,7 +21,6 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
   // Parse commandline args
   int ch;
   while ((ch = getopt(argc, argv, "w:h:d:t:s:v:p:")) != -1) {
-    printf("Found arg %c with value %s\n", ch, optarg);
     switch (ch) {
     case 'w': {
       int w = atoi(optarg);
