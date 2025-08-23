@@ -49,16 +49,10 @@ int main(int argc, char **argv) {
   /*
    * Fork and exec the view process
    */
-  int child_pid = fork();
-  if (!child_pid) {
+  int view_pid = fork();
+  if (!view_pid) {
     close(shm_fd);
-
     execv(args.view, argv);
-  } else {
-    int ret;
-    waitpid(child_pid, &ret, 0);
-
-    printf("[master] View process exited with code %d\n", ret);
   }
 
   ///// pipe setup mk1 and fork and exec players
@@ -72,10 +66,10 @@ int main(int argc, char **argv) {
     }
   }
 
-  printf("[master] Creating player process...\n");
+  printf("[master] Creating player processes...\n");
   // a cada player se le manda sus respectivos pipes de read y write
-  char **enviroment; // todo: enviroment variables to pass to each player
-  int children[MAX_PLAYERS];
+  int player_pids[MAX_PLAYERS];
+
   for (int i = 0; args.players[i] != NULL; i++) {
     int pid = fork();
     if (pid == -1) {
@@ -83,16 +77,27 @@ int main(int argc, char **argv) {
     } // falla el fork
 
     if (!pid) { /// child proces
-      printf("soy child, existo");
-      execve("player", args.players, enviroment);
+      execv(args.players[i], argv);
+    } else {
+      player_pids[i] = pid; // parent guarda el pid de los nenes
     }
-    int ret;
-    waitpid(pid, &ret, 0);
-    printf("[master] Player{%d} process exited with code %d\n", i, ret);
-    children[i] = pid; // parent guarda el pid de los nenes
   }
 
   /// en  este punto estan los pipes en pipesr/w y los hijos de players creados
+
+  printf("[master] Waiting for child processes to end...\n");
+  for (int i = 0; args.players[i] != NULL; i++) {
+    int pid = player_pids[i];
+    int ret;
+    waitpid(pid, &ret, 0);
+    printf("[master] Player %d process with pid %d exited with code %d\n",
+           i + 1, pid, ret);
+  }
+
+  printf("[master] Waiting for view process to end...\n");
+  int ret;
+  waitpid(view_pid, &ret, 0);
+  printf("[master] View process exited with code %d\n", ret);
 
   printf("[master] Unlinking shared memory...\n");
   shm_unlink("/game_state");
