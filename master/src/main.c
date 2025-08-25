@@ -1,10 +1,13 @@
-#include "args.h"
+#include <args.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+void logpid() { printf("[master: %d] ", getpid()); }
 
 int main(int argc, char **argv) {
   args_t args;
@@ -15,7 +18,8 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  printf("[master] Hello world\n\n");
+  logpid();
+  printf("Hello world! My pid is %d\n\n", getpid());
 
   printf("Board size %ux%u\n", args.width, args.height);
   printf("Delay %ums\n", args.delay);
@@ -31,10 +35,12 @@ int main(int argc, char **argv) {
   /*
    * Set up shared memory
    */
-  printf("[master] Creating shared memory...\n");
-  int shm_fd = shm_open("/game_state", O_RDWR | O_CREAT | O_EXCL, 0);
+  logpid();
+  printf("Creating shared memory...\n");
+  int shm_fd = shm_open("/game_state", O_RDWR | O_CREAT, 0);
   if (shm_fd < 0) {
-    printf("[master] Failed to create shared memory\n");
+    logpid();
+    printf("Failed to create shared memory\n");
     return -2;
   }
 
@@ -49,23 +55,69 @@ int main(int argc, char **argv) {
   /*
    * Fork and exec the view process
    */
-  int child_pid = fork();
-  if (!child_pid) {
+  logpid();
+  printf("Spawning view process...\n");
+  int view_pid = fork();
+  if (view_pid == -1) {
+    logpid();
+    printf("Failed to fork view process\n");
+    return -1;
+  } else if (!view_pid) {
     close(shm_fd);
-
     execv(args.view, argv);
-  } else {
-    int ret;
-    waitpid(child_pid, &ret, 0);
-
-    printf("[master] View process exited with code %d\n", ret);
   }
 
-  printf("[master] Unlinking shared memory...\n");
+  /*
+   * Fork and exec player processes
+   */
+  logpid();
+  printf("Spawning player processes...\n");
+  player_data_t players[MAX_PLAYERS];
+
+  for (int i = 0; args.players[i] != NULL; i++) {
+    players[i] = spawn_player(args.players[i], argv);
+  }
+
+  logpid();
+  printf("Player communication test...\n");
+  char buf[256];
+  for (int i = 0; args.players[i] != NULL; i++) {
+    dprintf(players[i].pipe_tx, "Hello player %d", i + 1);
+    int read_bytes = read(players[i].pipe_rx, buf, 256);
+    buf[read_bytes] = 0;
+
+    logpid();
+    printf("Player %d response: %s\n", i + 1, buf);
+  }
+
+  /*
+   * Wait for child processes and clean up resources
+   */
+  logpid();
+  printf("Waiting for child processes to end...\n");
+  for (int i = 0; args.players[i] != NULL; i++) {
+    int pid = players[i].pid;
+    int ret;
+    waitpid(pid, &ret, 0);
+    logpid();
+    printf("Player %d process with pid %d exited with code %d\n", i + 1, pid,
+           ret);
+  }
+
+  logpid();
+  printf("Waiting for view process to end...\n");
+  int ret;
+  waitpid(view_pid, &ret, 0);
+  logpid();
+  printf("View process exited with code %d\n", ret);
+
+  logpid();
+  printf("Unlinking shared memory...\n");
   shm_unlink("/game_state");
 
   free_args(&args);
 
+  logpid();
   printf("Bye!\n");
   return 0;
 }
