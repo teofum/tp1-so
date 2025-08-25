@@ -6,7 +6,7 @@
 typedef struct {
   sem_t view_should_update;
   sem_t view_did_update;
-  sem_t master_lock; // what does this do
+  sem_t game_sync_lock;
   sem_t game_state_lock;
   sem_t active_player_count_lock;
   unsigned int active_player_count;
