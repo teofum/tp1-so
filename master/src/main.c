@@ -78,8 +78,6 @@ int main(int argc, char **argv) {
     players[i] = spawn_player(args.players[i], argv);
   }
 
-  /// en  este punto estan los pipes en pipesr/w y los hijos de players creados
-
   logpid();
   printf("Player communication test...\n");
   char buf[256];
