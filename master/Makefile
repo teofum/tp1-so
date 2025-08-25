@@ -1,6 +1,7 @@
 include ../Makefile.inc
 
 OUTFILE=out/master
-STATICLIBS=
+STATICLIBS=../out/chompchamps.a
+INCLUDES=../lib/include
 
 include ../Makefile.common
