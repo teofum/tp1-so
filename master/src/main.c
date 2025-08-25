@@ -1,4 +1,5 @@
-#include "args.h"
+#include <args.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <sys/mman.h>
@@ -71,43 +72,10 @@ int main(int argc, char **argv) {
    */
   logpid();
   printf("Spawning player processes...\n");
-  int player_pids[MAX_PLAYERS];
-  int pipes_transmit[2][MAX_PLAYERS];
-  int pipes_receive[2][MAX_PLAYERS];
+  player_data_t players[MAX_PLAYERS];
 
   for (int i = 0; args.players[i] != NULL; i++) {
-    // Create pipes to communicate with player
-    if (pipe(pipes_transmit[i]) == -1 || pipe(pipes_receive[i]) == -1) {
-      logpid();
-      printf("Failed to create pipes for player %d\n", i + 1);
-      return -1;
-    }
-
-    int pid = fork();
-    if (pid == -1) {
-      logpid();
-      printf("Failed to fork player %d process\n", i + 1);
-      return -1;
-    } else if (!pid) {
-      logpid();
-      printf("Child process %d setting up pipes\n", i + 1);
-      // Connect player stdin to master -> player pipe
-      dup2(pipes_transmit[i][0], 0);
-      // And stdout to player -> master pipe
-      dup2(pipes_receive[i][1], 1);
-
-      // Close unused fds (player)
-      close(pipes_transmit[i][1]);
-      close(pipes_receive[i][0]);
-
-      execv(args.players[i], argv);
-    }
-
-    // Close unused fds (master)
-    close(pipes_transmit[i][0]);
-    close(pipes_receive[i][1]);
-
-    player_pids[i] = pid;
+    players[i] = spawn_player(args.players[i], argv);
   }
 
   /// en  este punto estan los pipes en pipesr/w y los hijos de players creados
@@ -116,8 +84,8 @@ int main(int argc, char **argv) {
   printf("Player communication test...\n");
   char buf[256];
   for (int i = 0; args.players[i] != NULL; i++) {
-    dprintf(pipes_transmit[i][1], "Hello player %d", i + 1);
-    int read_bytes = read(pipes_receive[i][0], buf, 256);
+    dprintf(players[i].pipe_tx, "Hello player %d", i + 1);
+    int read_bytes = read(players[i].pipe_rx, buf, 256);
     buf[read_bytes] = 0;
 
     logpid();
@@ -130,7 +98,7 @@ int main(int argc, char **argv) {
   logpid();
   printf("Waiting for child processes to end...\n");
   for (int i = 0; args.players[i] != NULL; i++) {
-    int pid = player_pids[i];
+    int pid = players[i].pid;
     int ret;
     waitpid(pid, &ret, 0);
     logpid();
