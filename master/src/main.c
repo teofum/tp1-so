@@ -58,6 +58,9 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  // test
+  game_state->n_players = 1337;
+
   /*
    * Fork and exec the view process
    */
