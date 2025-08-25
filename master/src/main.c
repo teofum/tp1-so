@@ -1,5 +1,9 @@
 #include <args.h>
+#include <game_state.h>
+#include <game_sync.h>
+#include <shm_utils.h>
 #include <spawn.h>
+
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <sys/mman.h>
@@ -37,20 +41,22 @@ int main(int argc, char **argv) {
    */
   logpid();
   printf("Creating shared memory...\n");
-  int shm_fd = shm_open("/game_state", O_RDWR | O_CREAT, 0);
-  if (shm_fd < 0) {
+
+  game_state_t *game_state =
+      shm_open_and_map("/game_state", O_RDWR | O_CREAT, sizeof(game_state_t));
+  if (!game_state) {
     logpid();
-    printf("Failed to create shared memory\n");
-    return -2;
+    printf("Failed to create shared memory game_state\n");
+    return -1;
   }
 
-  // make it 100 bytes to test
-  ftruncate(shm_fd, 100);
-
-  void *mem = mmap(NULL, 100, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-  // TODO null check
-
-  sprintf(mem, "pinga");
+  game_sync_t *game_sync =
+      shm_open_and_map("/game_sync", O_RDWR | O_CREAT, sizeof(game_sync_t));
+  if (!game_state) {
+    logpid();
+    printf("Failed to create shared memory game_sync\n");
+    return -1;
+  }
 
   /*
    * Fork and exec the view process
@@ -63,7 +69,6 @@ int main(int argc, char **argv) {
     printf("Failed to fork view process\n");
     return -1;
   } else if (!view_pid) {
-    close(shm_fd);
     execv(args.view, argv);
   }
 

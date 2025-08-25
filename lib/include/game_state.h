@@ -12,7 +12,7 @@ typedef struct {
   unsigned int requests_valid;
   unsigned short x, y;
   pid_t pid;
-  bool blocked;
+  int blocked;
 } player_t;
 
 typedef struct {
@@ -20,7 +20,7 @@ typedef struct {
   unsigned short board_height;
   unsigned int n_players;
   player_t players[9];
-  bool game_ended;
+  int game_ended;
   int board[];
 } game_state_t;
 
