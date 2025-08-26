@@ -81,10 +81,11 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
     }
   }
 
-  if (args->players[0] == NULL) {
-    *err = "No players";
-    return 0;
-  }
+  // TODO setting for master vs view/player
+  // if (args->players[0] == NULL) {
+  //   *err = "No players";
+  //   return 0;
+  // }
 
   return 1;
 }
