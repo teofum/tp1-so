@@ -16,7 +16,7 @@ void logpid() { printf("[player: %d] ", getpid()); }
 
 // TODO move this to files etc
 
-int get_next_move() { return 0; }
+int get_next_move() { return rand() % 8; }
 
 int main(int argc, char **argv) {
   /*
@@ -48,6 +48,15 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  int player_idx = 0;
+  int pid = getpid();
+  for (int i = 0; i < game_state->n_players; i++) {
+    if (game_state->players[i].pid == pid) {
+      player_idx = i;
+      break;
+    }
+  }
+
   /*
    * Main loop
    */
@@ -67,7 +76,7 @@ int main(int argc, char **argv) {
     // Read game state here
 
     sem_wait(&game_sync->read_count_mutex);
-    if (--game_sync->read_count == 0) {
+    if (game_sync->read_count-- == 1) {
       sem_post(&game_sync->game_state_mutex);
     }
     sem_post(&game_sync->read_count_mutex);
@@ -75,8 +84,12 @@ int main(int argc, char **argv) {
     int next_move = get_next_move();
 
     // Send next move to master
-    sem_wait(&game_sync->player_may_move[0]);
-    putchar(next_move);
+    sem_wait(&game_sync->player_may_move[player_idx]);
+    write(STDOUT_FILENO, &next_move, 1);
+
+    if (game_state->game_ended) {
+      running = 0;
+    }
   }
 
   return 0;

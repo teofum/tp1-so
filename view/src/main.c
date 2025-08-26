@@ -95,13 +95,12 @@ int main(int argc, char **argv) {
         mvaddstr(i * 2, j * 3, buf);
       }
     }
+    refresh();
 
     sem_post(&game_sync->view_did_update);
 
     if (game_state->game_ended) {
       game_running = 0;
-      // TODO: print "press any key to exit" message
-      getch();
     }
   }
 
