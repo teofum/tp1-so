@@ -60,7 +60,8 @@ int main(int argc, char **argv) {
   printf("Creating shared memory...\n");
 
   game_state_t *game_state =
-      shm_open_and_map("/game_state", O_RDWR | O_CREAT, sizeof(game_state_t));
+      shm_open_and_map("/game_state", O_RDWR | O_CREAT,
+                       get_game_state_size(args.width, args.height));
   if (!game_state) {
     logpid();
     printf("Failed to create shared memory game_state\n");

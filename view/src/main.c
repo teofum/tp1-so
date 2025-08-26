@@ -33,11 +33,13 @@ int main(int argc, char **argv) {
   logpid();
   printf("Board size %ux%u\n\n", args.width, args.height);
 
+  free_args(&args);
+
   /*
    * Set up shared memory
    */
-  game_state_t *game_state =
-      shm_open_and_map("/game_state", O_RDONLY, sizeof(game_state_t));
+  game_state_t *game_state = shm_open_and_map(
+      "/game_state", O_RDONLY, get_game_state_size(args.width, args.height));
   if (!game_state) {
     logpid();
     printf("Failed to create shared memory game_state\n");
@@ -51,8 +53,6 @@ int main(int argc, char **argv) {
     printf("Failed to create shared memory game_sync\n");
     return -1;
   }
-
-  free_args(&args);
 
   logpid();
   printf("n_players is %d\n", game_state->n_players);
