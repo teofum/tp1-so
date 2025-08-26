@@ -14,7 +14,7 @@ void logpid() { printf("[view: %d] ", getpid()); }
 
 int main(int argc, char **argv) {
   /*
-   * Parse command line args
+   * Parse command line args and calculate size of game state
    */
   args_t args;
   const char *parse_err = NULL;
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   logpid();
   printf("Hello world\n");
   logpid();
-  printf("Board size %ux%u\n\n", args.width, args.height);
+  printf("Board size %ux%u\n", args.width, args.height);
 
   size_t game_state_size = get_game_state_size(args.width, args.height);
 
