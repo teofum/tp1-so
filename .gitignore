@@ -13,3 +13,7 @@ build/
 out/
 
 *.pdf
+
+#shell crap
+.bash_history
+.lesshst
