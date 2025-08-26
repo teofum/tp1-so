@@ -33,13 +33,15 @@ int main(int argc, char **argv) {
   logpid();
   printf("Board size %ux%u\n\n", args.width, args.height);
 
+  size_t game_state_size = get_game_state_size(args.width, args.height);
+
   free_args(&args);
 
   /*
    * Set up shared memory
    */
-  game_state_t *game_state = shm_open_and_map(
-      "/game_state", O_RDONLY, get_game_state_size(args.width, args.height));
+  game_state_t *game_state =
+      shm_open_and_map("/game_state", O_RDONLY, game_state_size);
   if (!game_state) {
     logpid();
     printf("Failed to create shared memory game_state\n");
