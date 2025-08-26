@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
    * Set up shared memory
    */
   game_state_t *game_state =
-      shm_open_and_map("/game_state", O_RDWR | O_CREAT, sizeof(game_state_t));
+      shm_open_and_map("/game_state", O_RDONLY, sizeof(game_state_t));
   if (!game_state) {
     logpid();
     printf("Failed to create shared memory game_state\n");
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   }
 
   game_sync_t *game_sync =
-      shm_open_and_map("/game_sync", O_RDWR | O_CREAT, sizeof(game_sync_t));
+      shm_open_and_map("/game_sync", O_RDWR, sizeof(game_sync_t));
   if (!game_state) {
     logpid();
     printf("Failed to create shared memory game_sync\n");
