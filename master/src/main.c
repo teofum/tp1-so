@@ -14,6 +14,9 @@
 void logpid() { printf("[master: %d] ", getpid()); }
 
 int main(int argc, char **argv) {
+  /*
+   * Parse command line args
+   */
   args_t args;
   const char *parse_err = NULL;
   if (!parse_args(argc, argv, &args, &parse_err)) {
@@ -22,6 +25,10 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  /*
+   * Print the args we received
+   * TODO: remove this debug code
+   */
   logpid();
   printf("Hello world! My pid is %d\n\n", getpid());
 
@@ -35,6 +42,8 @@ int main(int argc, char **argv) {
 
   for (int i = 0; args.players[i] != NULL; i++)
     printf("Player %d: %s\n", i + 1, args.players[i]);
+
+  printf("\n");
 
   /*
    * Set up shared memory
