@@ -3,7 +3,7 @@ OBJECTS=$(foreach I,$(SOURCES:.c=.o),build/$(notdir $I))
 
 all: $(OUTFILE)
 
-$(OUTFILE): out build $(OBJECTS)
+$(OUTFILE): out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) -o $(OUTFILE) $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 build/%.o: src/%.c

@@ -1,21 +1,25 @@
-all: master player view
+all: master master_demo player view
 
-master: out docker lib
+master: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/master
 	rm -f out/master
 	ln master/out/master out/master
 
-player: out docker lib
+master_demo: out demo/master_demo
+	rm -f out/master_demo
+	ln demo/master_demo out/master_demo
+
+player: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/player
 	rm -f out/player
 	ln player/out/player out/player
 
-view: out docker lib
+view: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/view
 	rm -f out/view
 	ln view/out/view out/view
 
-lib: out docker
+out/chompchamps.a: out docker
 	docker exec -it so-builder make all -C /root/lib
 	rm -f out/chompchamps.a
 	ln lib/out/chompchamps.a out/chompchamps.a
@@ -40,4 +44,4 @@ docker_pull:
 #	tuve que usar este yo _(:v \)/_ (lolo)
 	docker exec -it so-builder apt install libncurses-dev
 
-.PHONY: master player view
+.PHONY: master master_demo player view
