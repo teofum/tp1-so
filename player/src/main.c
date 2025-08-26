@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     // Read game state here
 
     sem_wait(&game_sync->read_count_mutex);
-    if (game_sync->read_count-- == 1) {
+    if (--game_sync->read_count == 0) {
       sem_post(&game_sync->game_state_mutex);
     }
     sem_post(&game_sync->read_count_mutex);
