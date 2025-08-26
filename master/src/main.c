@@ -124,6 +124,20 @@ int main(int argc, char **argv) {
   }
 
   /*
+   * Process player move requests mk1
+   */
+  int current_player = 0;
+  while(!game_state->game_ended){
+    //tengo que ir rotando en los player y hacer el select
+    if(select(players[current_player].pipe_rx, NULL, NULL, NULL, NULL)){
+      // tengo que leer del player y escribirlo al puto board
+      // mientras escribo no deberian poder leer los otros 
+    }
+    current_player = (current_player + 1) % MAX_PLAYERS;
+  }
+
+
+  /*
    * Wait for child processes and clean up resources
    */
   logpid();
