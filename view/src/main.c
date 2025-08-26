@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <sys/mman.h>
+#include <sys/semaphore.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -77,20 +78,31 @@ int main(int argc, char **argv) {
     init_pair(7, COLOR_WHITE, COLOR_BLACK);
   }
 
-  // temporary shitty board print
-  // TODO: make this better
-  char buf[5];
-  for (int i = 0; i < game_state->board_height; i++) {
-    for (int j = 0; j < game_state->board_width; j++) {
-      int value = game_state->board[i * game_state->board_width + j];
-      sprintf(buf, "%02d ", value);
-      attr_set(A_NORMAL, value > 0 ? 0 : -value, NULL);
-      mvaddstr(i * 2, j * 3, buf);
-    }
-    printf("\n");
-  }
+  int game_running = 1;
+  while (game_running) {
+    sem_wait(&game_sync->view_should_update);
 
-  getch();
+    // temporary shitty board print
+    // TODO: make this better
+    char buf[5];
+    for (int i = 0; i < game_state->board_height; i++) {
+      for (int j = 0; j < game_state->board_width; j++) {
+        int value = game_state->board[i * game_state->board_width + j];
+        sprintf(buf, "%02d ", value);
+        attr_set(A_NORMAL, value > 0 ? 0 : -value, NULL);
+        mvaddstr(i * 2, j * 3, buf);
+      }
+      printf("\n");
+    }
+
+    sem_post(&game_sync->view_did_update);
+
+    if (game_state->game_ended) {
+      game_running = 0;
+      // TODO: print "press any key to exit" message
+      getch();
+    }
+  }
 
   // Cleanup ncurses
   endwin();
