@@ -14,6 +14,9 @@
 void logpid() { printf("[master: %d] ", getpid()); }
 
 int main(int argc, char **argv) {
+  /*
+   * Parse command line args
+   */
   args_t args;
   const char *parse_err = NULL;
   if (!parse_args(argc, argv, &args, &parse_err)) {
@@ -22,19 +25,33 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  /*
+   * Print the args we received
+   * TODO: remove this debug code
+   */
   logpid();
-  printf("Hello world! My pid is %d\n\n", getpid());
+  printf("Hello world!\n\n");
 
+  logpid();
   printf("Board size %ux%u\n", args.width, args.height);
+  logpid();
   printf("Delay %ums\n", args.delay);
+  logpid();
   printf("Timeout %ums\n", args.timeout);
+  logpid();
   printf("Seed %d\n", args.seed);
 
-  if (args.view)
+  if (args.view) {
+    logpid();
     printf("View executable %s\n", args.view);
+  }
 
-  for (int i = 0; args.players[i] != NULL; i++)
+  for (int i = 0; args.players[i] != NULL; i++) {
+    logpid();
     printf("Player %d: %s\n", i + 1, args.players[i]);
+  }
+
+  printf("\n");
 
   /*
    * Set up shared memory
@@ -43,7 +60,8 @@ int main(int argc, char **argv) {
   printf("Creating shared memory...\n");
 
   game_state_t *game_state =
-      shm_open_and_map("/game_state", O_RDWR | O_CREAT, sizeof(game_state_t));
+      shm_open_and_map("/game_state", O_RDWR | O_CREAT,
+                       get_game_state_size(args.width, args.height));
   if (!game_state) {
     logpid();
     printf("Failed to create shared memory game_state\n");
@@ -123,6 +141,7 @@ int main(int argc, char **argv) {
   printf("Unlinking shared memory...\n");
   shm_unlink("/game_state");
 
+  // TODO: free the args once we get the shtuff into shmem
   free_args(&args);
 
   logpid();

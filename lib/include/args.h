@@ -5,6 +5,11 @@
 
 #define MAX_PLAYERS 9
 
+/*
+ * Command line args for all components
+ * view/players only need a subset of the master args, so we can
+ * reuse this struct and parse function for all of them
+ */
 typedef struct {
   uint32_t width, height;
 
