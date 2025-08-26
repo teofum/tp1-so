@@ -3,10 +3,10 @@
 #include <game_sync.h>
 #include <shm_utils.h>
 
+#include <semaphore.h>
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <sys/mman.h>
-#include <sys/semaphore.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
