@@ -30,18 +30,26 @@ int main(int argc, char **argv) {
    * TODO: remove this debug code
    */
   logpid();
-  printf("Hello world! My pid is %d\n\n", getpid());
+  printf("Hello world!\n\n");
 
+  logpid();
   printf("Board size %ux%u\n", args.width, args.height);
+  logpid();
   printf("Delay %ums\n", args.delay);
+  logpid();
   printf("Timeout %ums\n", args.timeout);
+  logpid();
   printf("Seed %d\n", args.seed);
 
-  if (args.view)
+  if (args.view) {
+    logpid();
     printf("View executable %s\n", args.view);
+  }
 
-  for (int i = 0; args.players[i] != NULL; i++)
+  for (int i = 0; args.players[i] != NULL; i++) {
+    logpid();
     printf("Player %d: %s\n", i + 1, args.players[i]);
+  }
 
   printf("\n");
 
@@ -132,6 +140,7 @@ int main(int argc, char **argv) {
   printf("Unlinking shared memory...\n");
   shm_unlink("/game_state");
 
+  // TODO: free the args once we get the shtuff into shmem
   free_args(&args);
 
   logpid();
