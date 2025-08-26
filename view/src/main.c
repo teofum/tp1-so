@@ -16,6 +16,17 @@
 
 void logpid() { printf("[view: %d] ", getpid()); }
 
+void rect(int y1, int x1, int y2, int x2) {
+  mvhline(y1, x1, 0, x2 - x1);
+  mvhline(y2, x1, 0, x2 - x1);
+  mvvline(y1, x1, 0, y2 - y1);
+  mvvline(y1, x2, 0, y2 - y1);
+  mvaddch(y1, x1, ACS_ULCORNER);
+  mvaddch(y2, x1, ACS_LLCORNER);
+  mvaddch(y1, x2, ACS_URCORNER);
+  mvaddch(y2, x2, ACS_LRCORNER);
+}
+
 int main(int argc, char **argv) {
   /*
    * Parse command line args and calculate size of game state
@@ -92,7 +103,9 @@ int main(int argc, char **argv) {
         int value = game_state->board[i * game_state->board_width + j];
         sprintf(buf, "%02d ", value);
         attr_set(A_NORMAL, value > 0 ? 0 : -value + 1, NULL);
-        mvaddstr(i * 2, j * 3, buf);
+
+        rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
+        mvaddstr(i * 3 + 1, j * 5 + 1, buf);
       }
     }
     refresh();
