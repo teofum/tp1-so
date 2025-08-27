@@ -1,6 +1,7 @@
 #include <args.h>
 #include <game_state.h>
 #include <game_sync.h>
+#include <graphics.h>
 #include <shm_utils.h>
 
 #include <semaphore.h>
@@ -68,52 +69,38 @@ int main(int argc, char **argv) {
   }
 
   /*
-   * Init ncurses stuff
-   * TODO: clean this shit up
+   * Init ncurses
    */
+  gfx_init();
 
-  // TERM env var is lost when process is spawned from the provided master,
-  // causing ncurses init to fail. We set it manually to work around this.
-  setenv("TERM", "xterm", 0);
-
-  (void)initscr();
-  (void)nonl();
-
-  if (has_colors()) {
-    start_color();
-
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(4, COLOR_BLUE, COLOR_BLACK);
-    init_pair(5, COLOR_CYAN, COLOR_BLACK);
-    init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(7, COLOR_WHITE, COLOR_BLACK);
-  }
-
+  /*
+   * Main loop
+   */
   int game_running = 1;
   while (game_running) {
     sem_wait(&game_sync->view_should_update);
 
     // temporary shitty board print
     // TODO: make this better
-    char buf[5];
+    char buf[15];
     for (int i = 0; i < game_state->board_height; i++) {
       for (int j = 0; j < game_state->board_width; j++) {
         int value = game_state->board[i * game_state->board_width + j];
-        sprintf(buf, "%d", value);
-        attr_set(A_NORMAL, value > 0 ? 0 : -value + 1, NULL);
+        int color_pair = value > 0 ? value : CP_PLAYER - value;
 
         int player = -value;
-        rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
         if (value > 0) {
-          mvaddstr(i * 3 + 1, j * 5 + 1, buf);
+          sprintf(buf, " %d ", value);
         } else if (i == game_state->players[player].y &&
                    j == game_state->players[player].x) {
-          mvaddstr(i * 3 + 1, j * 5 + 1, "o_o");
+          sprintf(buf, "o_o");
         } else {
-          mvaddstr(i * 3 + 1, j * 5 + 1, "   ");
+          sprintf(buf, "   ");
         }
+
+        attr_set(A_NORMAL, color_pair, NULL);
+        rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
+        mvaddstr(i * 3 + 1, j * 5 + 1, buf);
       }
     }
     refresh();
