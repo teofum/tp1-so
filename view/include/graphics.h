@@ -9,7 +9,6 @@
 
 void gfx_init();
 
-void get_cell_contents(char *buf, int value, int i, int j,
-                       game_state_t *game_state);
+void draw_cell(int i, int j, game_state_t *game_state);
 
 #endif
