@@ -27,3 +27,28 @@ void gfx_init() {
     }
   }
 }
+
+void get_cell_contents(char *buf, int value, int i, int j,
+                       game_state_t *game_state) {
+  int player_idx = -value;
+  if (value > 0) {
+    sprintf(buf, " %d ", value);
+  } else if (i == game_state->players[player_idx].y &&
+             j == game_state->players[player_idx].x) {
+    int blocked = 1;
+    for (int ii = i; ii < i + 3 && blocked; ii++) {
+      for (int jj = j; jj < j + 3 && blocked; jj++) {
+        if (ii - i == 1 && jj - j == 1)
+          continue;
+
+        int local_value = game_state->board[ii * game_state->board_width + jj];
+        if (local_value == 0)
+          blocked = 0;
+      }
+    }
+
+    sprintf(buf, blocked ? "x_x" : "o_o");
+  } else {
+    sprintf(buf, "   ");
+  }
+}
