@@ -89,9 +89,9 @@ void draw_cell(int i, int j, game_state_t *game_state) {
   attr_set(A_NORMAL, color_pair, NULL);
 
   if (player_is_here) {
-    cat(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
+    cat(y1(i), x1(j), y2(i), x2(j));
   } else {
-    rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
+    rect(y1(i), x1(j), y2(i), x2(j));
   }
-  mvaddstr(i * 3 + 1, j * 5 + 1, buf);
+  mvaddstr(y1(i) + 1, x1(j) + 1, buf);
 }
