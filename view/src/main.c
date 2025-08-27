@@ -69,11 +69,19 @@ int main(int argc, char **argv) {
   while (game_running) {
     sem_wait(&game_sync->view_should_update);
 
+    erase();
+
+    for (int i = 0; i < game_state->n_players; i++) {
+      draw_player_card(i, game_state);
+    }
+
+    // draw grid
     for (int i = 0; i < game_state->board_height; i++) {
       for (int j = 0; j < game_state->board_width; j++) {
         draw_cell(i, j, game_state);
       }
     }
+
     refresh();
 
     sem_post(&game_sync->view_did_update);
