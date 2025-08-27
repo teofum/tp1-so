@@ -146,10 +146,17 @@ int main(int argc, char **argv) {
 
       sem_post(&game_sync->game_state_mutex);
 
+      // mandarlo a la vista
+
       usleep(args.delay); // sleep in milliseconds
     }
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
+
+  //Registrar el paso del tiempo entre solicitudes de movimientos válidas. 
+  //Si se supera el timeout configurado finaliza el juego. Este tiempo incluye
+  // la espera a la vista, es decir, que no tiene sentido establecer un delay 
+  //mayor al timeout
 
   // TODO? sem_destroy(); 
 
