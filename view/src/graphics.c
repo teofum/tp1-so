@@ -82,8 +82,14 @@ static void get_cell_contents(char *buf, int value, int i, int j,
 
 void draw_grid(game_state_t *game_state) {
   int32_t board_width = game_state->board_width * CELL_WIDTH;
+  int32_t board_height = game_state->board_height * CELL_HEIGHT;
 
-  if (board_width > COLS) {
+  uint32_t max_players_per_row = COLS / HEADER_MIN_WIDTH;
+  uint32_t header_rows =
+      (game_state->n_players + max_players_per_row - 1) / max_players_per_row;
+
+  if (board_width > COLS ||
+      board_height > LINES - HEADER_HEIGHT * header_rows) {
     for (int i = 0; i < game_state->board_height; i++) {
       for (int j = 0; j < game_state->board_width; j++) {
         draw_cell_mini(i, j, game_state);
