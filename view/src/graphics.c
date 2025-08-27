@@ -80,8 +80,29 @@ static void get_cell_contents(char *buf, int value, int i, int j,
   }
 }
 
+void draw_grid(game_state_t *game_state) {
+  int32_t board_width = game_state->board_width * CELL_WIDTH;
+
+  if (board_width > COLS) {
+    for (int i = 0; i < game_state->board_height; i++) {
+      for (int j = 0; j < game_state->board_width; j++) {
+        draw_cell_mini(i, j, game_state);
+      }
+    }
+  } else {
+    for (int i = 0; i < game_state->board_height; i++) {
+      for (int j = 0; j < game_state->board_width; j++) {
+        draw_cell(i, j, game_state);
+      }
+    }
+  }
+}
+
 void draw_cell(int i, int j, game_state_t *game_state) {
+  // will only ever hold 3 chars, but it needs to not overflow if a large number
+  // comes in for whatever reason
   static char buf[15];
+
   int value = game_state->board[i * game_state->board_width + j];
   int color_pair = value > 0 ? value : CP_PLAYER - value;
 
@@ -96,8 +117,8 @@ void draw_cell(int i, int j, game_state_t *game_state) {
   uint32_t header_rows =
       (game_state->n_players + max_players_per_row - 1) / max_players_per_row;
 
-  uint32_t board_width = game_state->board_width * CELL_WIDTH;
-  uint32_t x_offset = (COLS - board_width) / 2;
+  int32_t board_width = game_state->board_width * CELL_WIDTH;
+  int32_t x_offset = (COLS - board_width) / 2;
 
   uint32_t y1 = i * CELL_HEIGHT + HEADER_HEIGHT * header_rows;
   uint32_t x1 = j * CELL_WIDTH + x_offset;
@@ -110,6 +131,29 @@ void draw_cell(int i, int j, game_state_t *game_state) {
     rect(y1, x1, y2, x2);
   }
   mvaddstr(y1 + 1, x1 + 1, buf);
+}
+
+void draw_cell_mini(int i, int j, game_state_t *game_state) {
+  int value = game_state->board[i * game_state->board_width + j];
+  int color_pair = value > 0 ? value : CP_PLAYER - value;
+
+  int player_idx = -value;
+  int player_is_here = value <= 0 && i == game_state->players[player_idx].y &&
+                       j == game_state->players[player_idx].x;
+
+  char cell_char = value > 0 ? value + '0' : player_is_here ? '#' : '+';
+  attr_set(A_NORMAL, color_pair, NULL);
+
+  uint32_t max_players_per_row = COLS / HEADER_MIN_WIDTH;
+  uint32_t header_rows =
+      (game_state->n_players + max_players_per_row - 1) / max_players_per_row;
+
+  int32_t x_offset = (COLS - game_state->board_width) / 2;
+
+  uint32_t y = i + HEADER_HEIGHT * header_rows;
+  uint32_t x = j + x_offset;
+
+  mvaddch(y, x, cell_char);
 }
 
 void draw_player_card(int player_idx, game_state_t *game_state) {
@@ -144,7 +188,7 @@ void draw_player_card(int player_idx, game_state_t *game_state) {
 
   rect(y1, x1, y2, x2);
   move(y1 + 1, x1 + 1);
-  printw("%8s%s", player.name, player.blocked ? " [BLOCK]" : "");
+  printw("%-8s%s", player.name, player.blocked ? " [BLOCK]" : "");
   move(y1 + 2, x1 + 1);
   printw("Score: %d", player.score);
   move(y1 + 3, x1 + 1);

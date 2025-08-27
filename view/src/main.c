@@ -76,11 +76,7 @@ int main(int argc, char **argv) {
     }
 
     // draw grid
-    for (int i = 0; i < game_state->board_height; i++) {
-      for (int j = 0; j < game_state->board_width; j++) {
-        draw_cell(i, j, game_state);
-      }
-    }
+    draw_grid(game_state);
 
     refresh();
 
