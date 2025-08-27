@@ -82,7 +82,7 @@ void draw_cell(int i, int j, game_state_t *game_state) {
   int color_pair = value > 0 ? value : CP_PLAYER - value;
 
   int player_idx = -value;
-  int player_is_here = i == game_state->players[player_idx].y &&
+  int player_is_here = value <= 0 && i == game_state->players[player_idx].y &&
                        j == game_state->players[player_idx].x;
 
   get_cell_contents(buf, value, i, j, game_state);
