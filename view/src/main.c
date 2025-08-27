@@ -26,16 +26,6 @@ int main(int argc, char **argv) {
   }
   int width = atoi(argv[1]);
   int height = atoi(argv[2]);
-
-  /*
-   * Print the args we received
-   * TODO: remove this debug code
-   */
-  logpid();
-  printf("Hello world\n");
-  logpid();
-  printf("Board size %ux%u\n", width, height);
-
   size_t game_state_size = get_game_state_size(width, height);
 
   /*
