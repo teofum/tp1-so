@@ -39,13 +39,28 @@ static void rect(int y1, int x1, int y2, int x2) {
   mvaddch(y2, x2, ACS_LRCORNER);
 }
 
+static void cat(int y1, int x1, int y2, int x2) {
+  mvhline(y1, x1 + 1, 0, x2 - x1 - 2);
+  mvhline(y2, x1, 0, x2 - x1);
+  mvvline(y1, x1, 0, y2 - y1);
+  mvvline(y1, x2, 0, y2 - y1);
+  mvaddch(y1, x1 + 1, '^');
+  mvaddch(y1, x2 - 1, '^');
+  mvaddch(y1, x1, ACS_ULCORNER);
+  mvaddch(y2, x1, ACS_LLCORNER);
+  mvaddch(y1, x2, ACS_URCORNER);
+  mvaddch(y2, x2, ACS_LRCORNER);
+}
+
 static void get_cell_contents(char *buf, int value, int i, int j,
                               game_state_t *game_state) {
   int player_idx = -value;
+  int player_is_here = i == game_state->players[player_idx].y &&
+                       j == game_state->players[player_idx].x;
+
   if (value > 0) {
     sprintf(buf, " %d ", value);
-  } else if (i == game_state->players[player_idx].y &&
-             j == game_state->players[player_idx].x) {
+  } else if (player_is_here) {
     int blocked = 1;
     for (int ii = i - 1; ii < i + 2; ii++) {
       for (int jj = j - 1; jj < j + 2; jj++) {
@@ -55,7 +70,7 @@ static void get_cell_contents(char *buf, int value, int i, int j,
       }
     }
 
-    sprintf(buf, blocked ? "x_x" : "o_o");
+    sprintf(buf, blocked ? "-.-" : "o.o");
   } else {
     sprintf(buf, "   ");
   }
@@ -66,8 +81,17 @@ void draw_cell(int i, int j, game_state_t *game_state) {
   int value = game_state->board[i * game_state->board_width + j];
   int color_pair = value > 0 ? value : CP_PLAYER - value;
 
+  int player_idx = -value;
+  int player_is_here = i == game_state->players[player_idx].y &&
+                       j == game_state->players[player_idx].x;
+
   get_cell_contents(buf, value, i, j, game_state);
   attr_set(A_NORMAL, color_pair, NULL);
-  rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
+
+  if (player_is_here) {
+    cat(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
+  } else {
+    rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
+  }
   mvaddstr(i * 3 + 1, j * 5 + 1, buf);
 }
