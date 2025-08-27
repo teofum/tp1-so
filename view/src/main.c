@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
 
     if (game_state->game_ended) {
       game_running = 0;
+      getch();
     }
   }
 

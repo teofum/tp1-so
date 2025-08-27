@@ -61,9 +61,13 @@ static void get_cell_contents(char *buf, int value, int i, int j,
   if (value > 0) {
     sprintf(buf, " %d ", value);
   } else if (player_is_here) {
+    // this is super inefficient! but computers are fast :)
     int blocked = 1;
     for (int ii = i - 1; ii < i + 2; ii++) {
       for (int jj = j - 1; jj < j + 2; jj++) {
+        if (ii < 0 || ii >= game_state->board_height || jj < 0 ||
+            jj > game_state->board_width)
+          continue;
         int local_value = game_state->board[ii * game_state->board_width + jj];
         if (local_value > 0)
           blocked = 0;
