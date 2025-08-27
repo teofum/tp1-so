@@ -133,22 +133,26 @@ int main(int argc, char **argv) {
 
   int current_player = 0;
   while(!game_state->game_ended){
-    //tengo que ir rotando en los player y hacer el select
-    if(select(players[current_player].pipe_rx, NULL, NULL, NULL, NULL)){
-      // tengo que leer del player y escribirlo al puto view
-      // mientras escribo no deberian poder leer los otros
-      
+    if(select(players[current_player].pipe_rx, NULL, NULL, NULL, NULL)){// todo: ver campos del select
+
       sem_wait(&game_sync->master_write_mutex);
       sem_wait(&game_sync->game_state_mutex); 
       sem_post(&game_sync->master_write_mutex);
 
       //ejecutar movimiento
+      char buf;
+      read(players[current_player].pipe_tx,&buf, 1);
+      //makemove(current_player, buf);
 
       sem_post(&game_sync->game_state_mutex);
 
-      // mandarlo a la vista
+      /// view //
 
-      usleep(args.delay); // sleep in milliseconds
+      sem_post(&game_sync->view_should_update);
+      sem_wait(&game_sync->view_did_update); 
+      sem_wait(&game_sync->view_should_update);// aca noc si el view se tiene q volver a bloquear
+
+      //usleep(args.delay); // sleep in milliseconds, esto mepa que va en la vista 
     }
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
