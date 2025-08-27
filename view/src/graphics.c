@@ -22,11 +22,8 @@ void gfx_init() {
       init_pair(CP_GRAYSCALE + i, C_GRAY + i, COLOR_BLACK);
     }
 
-    init_pair(CP_PLAYER + 0, COLOR_RED, COLOR_BLACK);
-    init_pair(CP_PLAYER + 1, COLOR_GREEN, COLOR_BLACK);
-    init_pair(CP_PLAYER + 2, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(CP_PLAYER + 3, COLOR_BLUE, COLOR_BLACK);
-    init_pair(CP_PLAYER + 4, COLOR_MAGENTA, COLOR_BLACK);
-    // TODO
+    for (int i = 0; i < 9; i++) {
+      init_pair(CP_PLAYER + i, i + 1, COLOR_BLACK);
+    }
   }
 }
