@@ -101,11 +101,19 @@ int main(int argc, char **argv) {
     for (int i = 0; i < game_state->board_height; i++) {
       for (int j = 0; j < game_state->board_width; j++) {
         int value = game_state->board[i * game_state->board_width + j];
-        sprintf(buf, "%02d ", value);
+        sprintf(buf, "%d", value);
         attr_set(A_NORMAL, value > 0 ? 0 : -value + 1, NULL);
 
+        int player = -value;
         rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
-        mvaddstr(i * 3 + 1, j * 5 + 1, buf);
+        if (value > 0) {
+          mvaddstr(i * 3 + 1, j * 5 + 1, buf);
+        } else if (i == game_state->players[player].y &&
+                   j == game_state->players[player].x) {
+          mvaddstr(i * 3 + 1, j * 5 + 1, "o_o");
+        } else {
+          mvaddstr(i * 3 + 1, j * 5 + 1, "   ");
+        }
       }
     }
     refresh();
