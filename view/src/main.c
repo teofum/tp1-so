@@ -71,11 +71,9 @@ int main(int argc, char **argv) {
 
     erase();
 
-    for (int i = 0; i < game_state->n_players; i++) {
+    for (int i = 0; i < game_state->n_players; i++)
       draw_player_card(i, game_state);
-    }
 
-    // draw grid
     draw_grid(game_state);
 
     refresh();
