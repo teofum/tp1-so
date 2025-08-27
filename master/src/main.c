@@ -11,6 +11,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <semaphore.h> // TODO ; esto noc si va aca
+
 void logpid() { printf("[master: %d] ", getpid()); }
 
 int main(int argc, char **argv) {
@@ -126,15 +128,30 @@ int main(int argc, char **argv) {
   /*
    * Process player move requests mk1
    */
+
+  //sem_init(&game_sync->game_state_mutex);
+
   int current_player = 0;
   while(!game_state->game_ended){
     //tengo que ir rotando en los player y hacer el select
     if(select(players[current_player].pipe_rx, NULL, NULL, NULL, NULL)){
-      // tengo que leer del player y escribirlo al puto board
-      // mientras escribo no deberian poder leer los otros 
+      // tengo que leer del player y escribirlo al puto view
+      // mientras escribo no deberian poder leer los otros
+      
+      sem_wait(&game_sync->master_write_mutex);
+      sem_wait(&game_sync->game_state_mutex); 
+      sem_post(&game_sync->master_write_mutex);
+
+      //ejecutar movimiento
+
+      sem_post(&game_sync->game_state_mutex);
+
+      usleep(args.delay); // sleep in milliseconds
     }
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
+
+  // TODO? sem_destroy(); 
 
 
   /*
