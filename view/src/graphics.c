@@ -93,15 +93,23 @@ void draw_cell(int i, int j, game_state_t *game_state) {
   attr_set(A_NORMAL, color_pair, NULL);
 
   uint32_t max_players_per_row = COLS / HEADER_MIN_WIDTH;
-  uint32_t off =
+  uint32_t header_rows =
       (game_state->n_players + max_players_per_row - 1) / max_players_per_row;
 
+  uint32_t board_width = game_state->board_width * CELL_WIDTH;
+  uint32_t x_offset = (COLS - board_width) / 2;
+
+  uint32_t y1 = i * CELL_HEIGHT + HEADER_HEIGHT * header_rows;
+  uint32_t x1 = j * CELL_WIDTH + x_offset;
+  uint32_t y2 = i * CELL_HEIGHT + CELL_HEIGHT - 1 + HEADER_HEIGHT * header_rows;
+  uint32_t x2 = j * CELL_WIDTH + CELL_WIDTH - 1 + x_offset;
+
   if (player_is_here) {
-    cat(y1(i, off), x1(j), y2(i, off), x2(j));
+    cat(y1, x1, y2, x2);
   } else {
-    rect(y1(i, off), x1(j), y2(i, off), x2(j));
+    rect(y1, x1, y2, x2);
   }
-  mvaddstr(y1(i, off) + 1, x1(j) + 1, buf);
+  mvaddstr(y1 + 1, x1 + 1, buf);
 }
 
 void draw_player_card(int player_idx, game_state_t *game_state) {
