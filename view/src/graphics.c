@@ -36,13 +36,10 @@ void get_cell_contents(char *buf, int value, int i, int j,
   } else if (i == game_state->players[player_idx].y &&
              j == game_state->players[player_idx].x) {
     int blocked = 1;
-    for (int ii = i; ii < i + 3 && blocked; ii++) {
-      for (int jj = j; jj < j + 3 && blocked; jj++) {
-        if (ii - i == 1 && jj - j == 1)
-          continue;
-
+    for (int ii = i - 1; ii < i + 2; ii++) {
+      for (int jj = j - 1; jj < j + 2; jj++) {
         int local_value = game_state->board[ii * game_state->board_width + jj];
-        if (local_value == 0)
+        if (local_value > 0)
           blocked = 0;
       }
     }

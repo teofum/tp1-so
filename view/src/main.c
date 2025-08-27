@@ -88,16 +88,7 @@ int main(int argc, char **argv) {
         int value = game_state->board[i * game_state->board_width + j];
         int color_pair = value > 0 ? value : CP_PLAYER - value;
 
-        int player = -value;
-        if (value > 0) {
-          sprintf(buf, " %d ", value);
-        } else if (i == game_state->players[player].y &&
-                   j == game_state->players[player].x) {
-          sprintf(buf, "o_o");
-        } else {
-          sprintf(buf, "   ");
-        }
-
+        get_cell_contents(buf, value, i, j, game_state);
         attr_set(A_NORMAL, color_pair, NULL);
         rect(i * 3, j * 5, i * 3 + 2, j * 5 + 4);
         mvaddstr(i * 3 + 1, j * 5 + 1, buf);
