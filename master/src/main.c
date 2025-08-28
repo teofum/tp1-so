@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
       //ejecutar movimiento
       char buf;
       read(players[current_player].pipe_tx,&buf, 1);
-      //makemove(current_player, buf);
+      make_move(current_player, buf, game_state);
 
       sem_post(&game_sync->game_state_mutex);
 
