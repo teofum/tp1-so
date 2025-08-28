@@ -157,6 +157,7 @@ int main(int argc, char **argv) {
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
 
+  // TODO:
   //Registrar el paso del tiempo entre solicitudes de movimientos válidas. 
   //Si se supera el timeout configurado finaliza el juego. Este tiempo incluye
   // la espera a la vista, es decir, que no tiene sentido establecer un delay 
