@@ -129,19 +129,20 @@ int main(int argc, char **argv) {
    * Process player move requests mk1
    */
 
-  //sem_init(&game_sync->game_state_mutex);
+  // sem_init(&game_sync->game_state_mutex);
 
   int current_player = 0;
-  while(!game_state->game_ended){
-    if(select(players[current_player].pipe_rx, NULL, NULL, NULL, NULL)){// todo: ver campos del select
+  while (!game_state->game_ended) {
+    if (select(players[current_player].pipe_rx, NULL, NULL, NULL,
+               NULL)) { // todo: ver campos del select
 
       sem_wait(&game_sync->master_write_mutex);
-      sem_wait(&game_sync->game_state_mutex); 
+      sem_wait(&game_sync->game_state_mutex);
       sem_post(&game_sync->master_write_mutex);
 
-      //ejecutar movimiento
+      // ejecutar movimiento
       char buf;
-      read(players[current_player].pipe_tx,&buf, 1);
+      read(players[current_player].pipe_tx, &buf, 1);
       make_move(current_player, buf, game_state);
 
       sem_post(&game_sync->game_state_mutex);
@@ -149,22 +150,23 @@ int main(int argc, char **argv) {
       /// view //
 
       sem_post(&game_sync->view_should_update);
-      sem_wait(&game_sync->view_did_update); 
-      sem_wait(&game_sync->view_should_update);// aca noc si el view se tiene q volver a bloquear
+      sem_wait(&game_sync->view_did_update);
+      sem_wait(&game_sync->view_should_update); // aca noc si el view se tiene q
+                                                // volver a bloquear
 
-      //usleep(args.delay); // sleep in milliseconds, esto mepa que va en la vista 
+      // usleep(args.delay); // sleep in milliseconds, esto mepa que va en la
+      // vista
     }
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
 
   // TODO:
-  //Registrar el paso del tiempo entre solicitudes de movimientos válidas. 
-  //Si se supera el timeout configurado finaliza el juego. Este tiempo incluye
-  // la espera a la vista, es decir, que no tiene sentido establecer un delay 
-  //mayor al timeout
+  // Registrar el paso del tiempo entre solicitudes de movimientos válidas.
+  // Si se supera el timeout configurado finaliza el juego. Este tiempo incluye
+  // la espera a la vista, es decir, que no tiene sentido establecer un delay
+  // mayor al timeout
 
-  // TODO? sem_destroy(); 
-
+  // TODO? sem_destroy();
 
   /*
    * Wait for child processes and clean up resources
