@@ -129,7 +129,13 @@ int main(int argc, char **argv) {
    * Process player move requests mk1
    */
 
-  // sem_init(&game_sync->game_state_mutex);
+  // Initialize semaphores in game_sync // 0 locks and 1 unlocks
+  sem_init(&game_sync->view_should_update, 1, 0); // 0: view waits for master
+  sem_init(&game_sync->view_did_update, 1, 0);    // 0: master waits for view
+
+  sem_init(&game_sync->master_write_mutex, 1, 1); // 1: unlocked
+  sem_init(&game_sync->game_state_mutex, 1, 1);   // 1: unlocked
+  sem_init(&game_sync->read_count_mutex, 1, 1);   // 1: unlocked
 
   int current_player = 0;
   while (!game_state->game_ended) {
@@ -160,13 +166,20 @@ int main(int argc, char **argv) {
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
 
+  // Done with semaphores
+  sem_destroy(&game_sync->view_should_update);
+  sem_destroy(&game_sync->view_did_update);
+  
+  sem_destroy(&game_sync->master_write_mutex);
+  sem_destroy(&game_sync->game_state_mutex);
+  sem_destroy(&game_sync->read_count_mutex);
+
   // TODO:
   // Registrar el paso del tiempo entre solicitudes de movimientos válidas.
   // Si se supera el timeout configurado finaliza el juego. Este tiempo incluye
   // la espera a la vista, es decir, que no tiene sentido establecer un delay
   // mayor al timeout
 
-  // TODO? sem_destroy();
 
   /*
    * Wait for child processes and clean up resources
