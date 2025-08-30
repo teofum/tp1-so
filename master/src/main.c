@@ -203,12 +203,6 @@ int main(int argc, char **argv) {
   sem_destroy(&game_sync->game_state_mutex);
   sem_destroy(&game_sync->read_count_mutex);
 
-  // TODO:
-  // Registrar el paso del tiempo entre solicitudes de movimientos VALIDAS.
-  // Si se supera el timeout configurado finaliza el juego. Este tiempo incluye
-  // la espera a la vista, es decir, que no tiene sentido establecer un delay
-  // mayor al timeout
-
 
   /*
    * Wait for child processes and clean up resources
