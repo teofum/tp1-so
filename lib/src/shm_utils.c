@@ -8,7 +8,8 @@ void *shm_open_and_map(const char *name, int mode, size_t size) {
   if (fd < 0)
     return NULL;
 
-  ftruncate(fd, size);
+  if (mode & O_CREAT)
+    ftruncate(fd, size);
 
   int mmap_mode = PROT_READ;
   if (mode & O_RDWR)

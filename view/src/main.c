@@ -5,6 +5,7 @@
 
 #include <semaphore.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -19,13 +20,11 @@ int main(int argc, char **argv) {
   /*
    * Parse command line args and calculate size of game state
    */
-  args_t args;
-  const char *parse_err = NULL;
-  if (!parse_args(argc, argv, &args, &parse_err)) {
-    free_args(&args);
-    printf("Failed to parse args: %s\n", parse_err);
+  if (argc < 3) {
     return -1;
   }
+  int width = atoi(argv[1]);
+  int height = atoi(argv[2]);
 
   /*
    * Print the args we received
@@ -34,11 +33,9 @@ int main(int argc, char **argv) {
   logpid();
   printf("Hello world\n");
   logpid();
-  printf("Board size %ux%u\n", args.width, args.height);
+  printf("Board size %ux%u\n", width, height);
 
-  size_t game_state_size = get_game_state_size(args.width, args.height);
-
-  free_args(&args);
+  size_t game_state_size = get_game_state_size(width, height);
 
   /*
    * Set up shared memory
@@ -63,6 +60,11 @@ int main(int argc, char **argv) {
    * Init ncurses stuff
    * TODO: clean this shit up
    */
+
+  // TERM env var is lost when process is spawned from the provided master,
+  // causing ncurses init to fail. We set it manually to work around this.
+  setenv("TERM", "xterm", 0);
+
   (void)initscr();
   (void)nonl();
 
@@ -89,18 +91,16 @@ int main(int argc, char **argv) {
       for (int j = 0; j < game_state->board_width; j++) {
         int value = game_state->board[i * game_state->board_width + j];
         sprintf(buf, "%02d ", value);
-        attr_set(A_NORMAL, value > 0 ? 0 : -value, NULL);
+        attr_set(A_NORMAL, value > 0 ? 0 : -value + 1, NULL);
         mvaddstr(i * 2, j * 3, buf);
       }
-      printf("\n");
     }
+    refresh();
 
     sem_post(&game_sync->view_did_update);
 
     if (game_state->game_ended) {
       game_running = 0;
-      // TODO: print "press any key to exit" message
-      getch();
     }
   }
 
