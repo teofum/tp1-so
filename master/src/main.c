@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <semaphore.h> // TODO ; esto noc si va aca
+#include <sys/time.h>  // TODO ; esto noc si va aca
 
 void logpid() { printf("[master: %d] ", getpid()); }
 
@@ -137,45 +138,66 @@ int main(int argc, char **argv) {
   sem_init(&game_sync->game_state_mutex, 1, 1);   // 1: unlocked
   sem_init(&game_sync->read_count_mutex, 1, 1);   // 1: unlocked
 
+  // Select setup
+  fd_set current_pipe;
+  
+  struct timeval timeout_zero = { 0, 0 };// para que revise instantaneamente
   int current_player = 0;
-  while (!game_state->game_ended) {
-    if (select(players[current_player].pipe_rx, NULL, NULL, NULL,
-               NULL)) { // todo: ver campos del select
 
+  // Timeout 
+  struct timeval start, end;
+  long elapsed_s;
+  gettimeofday(&start, NULL);
+  
+  while (!game_state->game_ended) {
+
+    FD_ZERO(&current_pipe); // vacia el fd_set
+    FD_SET(players[current_player].pipe_rx,&current_pipe);
+    
+    int res = select( players[current_player].pipe_rx+1, &current_pipe, NULL, NULL, &timeout_zero);
+    if ( res < 0 ){ // Error
+      logpid();
+      printf("Select error :( \n");
+      return -1;
+    }else if( res > 0 ){ // current_player listo para lectura
       sem_wait(&game_sync->master_write_mutex);
       sem_wait(&game_sync->game_state_mutex);
       sem_post(&game_sync->master_write_mutex);
 
-      // ejecutar movimiento
+      // ejecutar movimiento //
       char buf;
       read(players[current_player].pipe_tx, &buf, 1);
-      make_move(current_player, buf, game_state);
+      if(make_move(current_player, buf, game_state)){ 
+        //valid move
+        gettimeofday(&end, NULL);
+        elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+        if(elapsed_s > args.timeout){}
+      }
 
       sem_post(&game_sync->game_state_mutex);
 
-      /// view //
-
+      // view //
       sem_post(&game_sync->view_should_update);
       sem_wait(&game_sync->view_did_update);
-      sem_wait(&game_sync->view_should_update); // aca noc si el view se tiene q
-                                                // volver a bloquear
+      sem_wait(&game_sync->view_should_update);
 
-      // usleep(args.delay); // sleep in milliseconds, esto mepa que va en la
-      // vista
+      usleep(args.delay);
     }
+     // Current_player todavia no esta listo para lectura
+     // veo el proximo
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
 
   // Done with semaphores
   sem_destroy(&game_sync->view_should_update);
   sem_destroy(&game_sync->view_did_update);
-  
+
   sem_destroy(&game_sync->master_write_mutex);
   sem_destroy(&game_sync->game_state_mutex);
   sem_destroy(&game_sync->read_count_mutex);
 
   // TODO:
-  // Registrar el paso del tiempo entre solicitudes de movimientos válidas.
+  // Registrar el paso del tiempo entre solicitudes de movimientos VALIDAS.
   // Si se supera el timeout configurado finaliza el juego. Este tiempo incluye
   // la espera a la vista, es decir, que no tiene sentido establecer un delay
   // mayor al timeout
