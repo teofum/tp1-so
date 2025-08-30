@@ -28,6 +28,4 @@ typedef struct {
 size_t get_game_state_size(uint16_t board_width, uint16_t board_height);
 
 
-int make_move(int player, char directio, game_state_t* game_state);
-
 #endif
