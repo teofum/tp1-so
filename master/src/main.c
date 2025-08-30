@@ -168,10 +168,17 @@ int main(int argc, char **argv) {
       char buf;
       read(players[current_player].pipe_tx, &buf, 1);
       if(make_move(current_player, buf, game_state)){ 
-        //valid move
+        // Valid move
         gettimeofday(&end, NULL);
+        
         elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
-        if(elapsed_s > args.timeout){}
+        if(elapsed_s > args.timeout){
+          game_state->game_ended = 1;
+          logpid();
+          printf("Valid move wait Timed out. Ending game.\n");
+        }else{
+          gettimeofday(&start, NULL);
+        }
       }
 
       sem_post(&game_sync->game_state_mutex);
