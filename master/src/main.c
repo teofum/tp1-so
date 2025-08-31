@@ -223,9 +223,9 @@ int main(int argc, char **argv) {
         elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
         if(elapsed_s > args.timeout){
           game_state->game_ended = 1;
-          logpid();
-          printf("Valid move Timed out, too slow. Ending game.\n");
-          return 0;
+          //logpid();
+          //printf("Valid move Timed out, too slow. Ending game.\n");
+          //return 0;
         }else{
           gettimeofday(&start, NULL);
         }
@@ -235,9 +235,9 @@ int main(int argc, char **argv) {
         elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
         if(elapsed_s > args.timeout){
           game_state->game_ended = 1;
-          logpid();
-          printf("Valid move wait Timed out. Ending game.\n");
-          return 0;
+          //logpid();
+          //printf("Valid move wait Timed out. Ending game.\n");
+          //return 0;
         }
       }
 
@@ -254,6 +254,9 @@ int main(int argc, char **argv) {
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
 
+  logpid();
+  printf("Game ended (╯°□°）╯︵ ┻━┻ \n");
+  
   // Done with semaphores
   sem_destroy(&game_sync->view_should_update);
   sem_destroy(&game_sync->view_did_update);
