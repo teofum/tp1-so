@@ -156,8 +156,12 @@ int main(int argc, char **argv) {
   printf("Spawning player processes...\n");
   player_data_t players[MAX_PLAYERS];
 
+    char child_argv[20][2];
+    sprintf(child_argv[0], "%u", game_state->board_width);
+    sprintf(child_argv[1], "%u", game_state->board_height);
+
   for (int i = 0; args.players[i] != NULL; i++) {
-    players[i] = spawn_player(args.players[i], argv);
+    players[i] = spawn_player(args.players[i], child_argv);
   }
 
   logpid();
@@ -173,7 +177,7 @@ int main(int argc, char **argv) {
   }
 
   /*
-   * Process player move requests mk1
+   * Process player move requests mk2
    */
 
   // Initialize semaphores in game_sync // 0 locks and 1 unlocks
@@ -216,14 +220,24 @@ int main(int argc, char **argv) {
       if(make_move(current_player, buf, game_state)){ 
         // Valid move
         gettimeofday(&end, NULL);
-        
+        elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+        if(elapsed_s > args.timeout){
+          game_state->game_ended = 1;
+          logpid();
+          printf("Valid move Timed out, too slow. Ending game.\n");
+          return 0;
+        }else{
+          gettimeofday(&start, NULL);
+        }
+      }else{
+        // Invalid move
+        gettimeofday(&end, NULL);
         elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
         if(elapsed_s > args.timeout){
           game_state->game_ended = 1;
           logpid();
           printf("Valid move wait Timed out. Ending game.\n");
-        }else{
-          gettimeofday(&start, NULL);
+          return 0;
         }
       }
 
