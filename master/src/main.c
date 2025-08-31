@@ -232,7 +232,6 @@ int main(int argc, char **argv) {
       // view //
       sem_post(&game_sync->view_should_update);
       sem_wait(&game_sync->view_did_update);
-      sem_wait(&game_sync->view_should_update);
 
       usleep(args.delay);
     }
