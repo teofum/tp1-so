@@ -1,6 +1,7 @@
 #include <args.h>
 #include <game_state.h>
 #include <game_sync.h>
+#include <graphics.h>
 #include <shm_utils.h>
 
 #include <semaphore.h>
@@ -25,16 +26,6 @@ int main(int argc, char **argv) {
   }
   int width = atoi(argv[1]);
   int height = atoi(argv[2]);
-
-  /*
-   * Print the args we received
-   * TODO: remove this debug code
-   */
-  logpid();
-  printf("Hello world\n");
-  logpid();
-  printf("Board size %ux%u\n", width, height);
-
   size_t game_state_size = get_game_state_size(width, height);
 
   /*
@@ -57,50 +48,31 @@ int main(int argc, char **argv) {
   }
 
   /*
-   * Init ncurses stuff
-   * TODO: clean this shit up
+   * Init ncurses
    */
+  gfx_init();
 
-  // TERM env var is lost when process is spawned from the provided master,
-  // causing ncurses init to fail. We set it manually to work around this.
-  setenv("TERM", "xterm", 0);
-
-  (void)initscr();
-  (void)nonl();
-
-  if (has_colors()) {
-    start_color();
-
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(4, COLOR_BLUE, COLOR_BLACK);
-    init_pair(5, COLOR_CYAN, COLOR_BLACK);
-    init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(7, COLOR_WHITE, COLOR_BLACK);
-  }
-
+  /*
+   * Main loop
+   */
   int game_running = 1;
   while (game_running) {
     sem_wait(&game_sync->view_should_update);
 
-    // temporary shitty board print
-    // TODO: make this better
-    char buf[5];
-    for (int i = 0; i < game_state->board_height; i++) {
-      for (int j = 0; j < game_state->board_width; j++) {
-        int value = game_state->board[i * game_state->board_width + j];
-        sprintf(buf, "%02d ", value);
-        attr_set(A_NORMAL, value > 0 ? 0 : -value + 1, NULL);
-        mvaddstr(i * 2, j * 3, buf);
-      }
-    }
+    erase();
+
+    for (int i = 0; i < game_state->n_players; i++)
+      draw_player_card(i, game_state);
+
+    draw_grid(game_state);
+
     refresh();
 
     sem_post(&game_sync->view_did_update);
 
     if (game_state->game_ended) {
       game_running = 0;
+      getch();
     }
   }
 
