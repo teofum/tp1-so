@@ -126,14 +126,17 @@ int main(int argc, char **argv) {
   }
 
   // TODO: test code remove later
-  game_state->board_height = args.height;
+  /*game_state->board_height = args.height;
   game_state->board_width = args.width;
   game_state->n_players = 1337;
   for (int i = 0; i < game_state->board_height; i++) {
     for (int j = 0; j < game_state->board_width; j++) {
       game_state->board[i * game_state->board_width + j] = i + j - 8;
     }
-  }
+  }*/
+  logpid();
+  printf("Initializing game state...\n");
+  game_state_init(game_state, &args);
 
   /*
    * Fork and exec the view process
@@ -298,3 +301,4 @@ int main(int argc, char **argv) {
   printf("Bye!\n");
   return 0;
 }
+
