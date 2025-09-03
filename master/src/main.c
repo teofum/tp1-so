@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
   gettimeofday(&start, NULL);
   
   logpid();
-  printf("Game started ( °-°) \n");
+  printf("Game started ( °-°) \n"); //lo imprime 2 veces T -T
 
   while (!game_state->game_ended) {
 
@@ -266,17 +266,10 @@ int main(int argc, char **argv) {
     current_player = (current_player + 1) % game_state->n_players;
   }
 
-  // Done with semaphores
-  sem_destroy(&game_sync->view_should_update);
-  sem_destroy(&game_sync->view_did_update);
-
-  sem_destroy(&game_sync->master_write_mutex);
-  sem_destroy(&game_sync->game_state_mutex);
-  sem_destroy(&game_sync->read_count_mutex);
-
   logpid();
   printf("Waiting for view process to end...\n");
   int ret;
+  sem_post(&game_sync->view_should_update);
   waitpid(view_pid, &ret, 0);
   logpid();
   printf("View process exited with code %d\n", ret);
@@ -300,7 +293,13 @@ int main(int argc, char **argv) {
            ret);
   }
 
+  // Done with semaphores
+  sem_destroy(&game_sync->view_should_update);
+  sem_destroy(&game_sync->view_did_update);
 
+  sem_destroy(&game_sync->master_write_mutex);
+  sem_destroy(&game_sync->game_state_mutex);
+  sem_destroy(&game_sync->read_count_mutex);
 
   logpid();
   printf("Unlinking shared memory...\n");
