@@ -211,6 +211,8 @@ int main(int argc, char **argv) {
     FD_SET(players[current_player].pipe_rx,&current_pipe);
     
     int res = select( players[current_player].pipe_rx+1, &current_pipe, NULL, NULL, &timeout_zero);
+    // todo problem, solo el player 0 activa el select
+    //printf("select: {%d} from p{%d}||\n",res ,current_player);
     if ( res < 0 ){ // Error
       logpid();
       printf("Select error :( \n");
@@ -223,6 +225,8 @@ int main(int argc, char **argv) {
       // ejecutar movimiento //
       char buf;
       read(players[current_player].pipe_tx, &buf, 1);
+      // todo: esto solo lee 0 
+      //printf("read{%d}\n",buf);
       sem_post(&game_sync->player_may_move[current_player]);// todo : pregunta, esto puede que tenga que ir antes
 
       //printf("red:%d form P{%d}||",buf, current_player);//solo lee 0
