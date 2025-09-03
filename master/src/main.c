@@ -215,8 +215,6 @@ int main(int argc, char **argv) {
     FD_SET(players[current_player].pipe_rx,&current_pipe);
     
     int res = select( players[current_player].pipe_rx+1, &current_pipe, NULL, NULL, &timeout_zero);
-    // todo problem, solo el player 0 activa el select
-    //printf("select: {%d} from p{%d}||\n",res ,current_player);
     if ( res < 0 ){ // Error
       logpid();
       printf("Select error :( \n");
@@ -258,7 +256,7 @@ int main(int argc, char **argv) {
       sem_post(&game_sync->view_should_update);
       sem_wait(&game_sync->view_did_update);
 
-      usleep(args.delay*2000);// Todo : el *2000 es para testing y verificar unidades;
+      usleep(args.delay);
     }
      // Current_player todavia no esta listo para lectura
      // veo el proximo
