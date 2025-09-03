@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
     }
      // Current_player todavia no esta listo para lectura
      // veo el proximo
-    current_player = (current_player + 1) % MAX_PLAYERS;
+    current_player = (current_player + 1) % game_state->n_players;
   }
 
   // Done with semaphores
