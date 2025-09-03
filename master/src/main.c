@@ -265,19 +265,22 @@ int main(int argc, char **argv) {
      // veo el proximo
     current_player = (current_player + 1) % game_state->n_players;
   }
-
-  logpid();
-  printf("Waiting for view process to end...\n");
-  int ret;
+  // Habilita todo para que finalize 
   sem_post(&game_sync->view_should_update);
-  waitpid(view_pid, &ret, 0);
-  logpid();
-  printf("View process exited with code %d\n", ret);
+  for(int i=0; i < game_state->n_players ; ++i){
+    sem_post(&game_sync->player_may_move[i]);
+  }
 
-  // Todo: el proceso de salir del view anda raro
   logpid();
   printf("Game ended (╯°□°）╯︵ ┻━┻ \n");
 
+  // Done with semaphores
+  sem_destroy(&game_sync->view_should_update);
+  sem_destroy(&game_sync->view_did_update);
+
+  sem_destroy(&game_sync->master_write_mutex);
+  sem_destroy(&game_sync->game_state_mutex);
+  sem_destroy(&game_sync->read_count_mutex);
 
   /*
    * Wait for child processes and clean up resources
@@ -293,13 +296,12 @@ int main(int argc, char **argv) {
            ret);
   }
 
-  // Done with semaphores
-  sem_destroy(&game_sync->view_should_update);
-  sem_destroy(&game_sync->view_did_update);
-
-  sem_destroy(&game_sync->master_write_mutex);
-  sem_destroy(&game_sync->game_state_mutex);
-  sem_destroy(&game_sync->read_count_mutex);
+  logpid();
+  printf("Waiting for view process to end...\n");
+  int ret;
+  waitpid(view_pid, &ret, 0);
+  logpid();
+  printf("View process exited with code %d\n", ret);
 
   logpid();
   printf("Unlinking shared memory...\n");
