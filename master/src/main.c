@@ -271,10 +271,10 @@ int main(int argc, char **argv) {
   sem_destroy(&game_sync->game_state_mutex);
   sem_destroy(&game_sync->read_count_mutex);
 
-  int ret;
-  waitpid(view_pid, &ret, 0);
   logpid();
   printf("Waiting for view process to end...\n");
+  int ret;
+  waitpid(view_pid, &ret, 0);
   logpid();
   printf("View process exited with code %d\n", ret);
 
