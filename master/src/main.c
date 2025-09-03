@@ -194,6 +194,10 @@ int main(int argc, char **argv) {
   sem_init(&game_sync->game_state_mutex, 1, 1);   // 1: unlocked
   sem_init(&game_sync->read_count_mutex, 1, 1);   // 1: unlocked
 
+  for(int i=0; i < game_state->n_players ; ++i){
+    sem_init(&game_sync->player_may_move[i],1,0); // 0: players waits for master
+  }
+
   // Select setup
   fd_set current_pipe;
   
