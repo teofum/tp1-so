@@ -209,6 +209,9 @@ int main(int argc, char **argv) {
   long elapsed_s;
   gettimeofday(&start, NULL);
   
+  logpid();
+  printf("Game started ( °-°) \n");
+
   while (!game_state->game_ended) {
 
     FD_ZERO(&current_pipe); // vacia el fd_set
