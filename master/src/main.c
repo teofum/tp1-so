@@ -18,9 +18,9 @@ void logpid() { printf("[master: %d] ", getpid()); }
 
 /*
  * Aplica el move, retorna 0 si fue invalido y 1 si se aplico
- */
+ */ // en teoria esta bien
 int make_move(int player, char dir, game_state_t *game_state) {
-  printf("d:%d",dir);
+  //printf("d:%d",dir);
   int x = game_state->players[player].x;
   int y = game_state->players[player].y;
 
@@ -38,9 +38,9 @@ int make_move(int player, char dir, game_state_t *game_state) {
   }
 
   int curpos = (game_state->board_width * y + x);
-  printf("c:%d",curpos);
+  //printf("c:{%d,%d}",x,y);
   int newpos = (curpos + (game_state->board_width * my + mx));
-  printf("n:%d\n",newpos);
+  //printf("n:{%d,%d}||",x+mx,y+my);
 
   // check if valid //todo esto esta mal
   if (!(0 <= (x + mx) && (x + mx) < game_state->board_width) ||
@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
       read(players[current_player].pipe_tx, &buf, 1);
       sem_post(&game_sync->player_may_move[current_player]);// todo : pregunta, esto puede que tenga que ir antes
 
-      //printf("read:%d",buf);
+      //printf("red:%d form P{%d}||",buf, current_player);//solo lee 0
       if(make_move(current_player, buf, game_state)){ 
         // Valid move
         gettimeofday(&end, NULL);
@@ -250,7 +250,7 @@ int main(int argc, char **argv) {
       sem_post(&game_sync->view_should_update);
       sem_wait(&game_sync->view_did_update);
 
-      usleep(args.delay);
+      usleep(args.delay*2000);// Todo : el *2000 es para testing y verificar unidades;
     }
      // Current_player todavia no esta listo para lectura
      // veo el proximo
