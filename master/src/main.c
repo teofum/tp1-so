@@ -20,28 +20,31 @@ void logpid() { printf("[master: %d] ", getpid()); }
  * Aplica el move, retorna 0 si fue invalido y 1 si se aplico
  */
 int make_move(int player, char dir, game_state_t *game_state) {
+  printf("d:%d",dir);
   int x = game_state->players[player].x;
   int y = game_state->players[player].y;
 
-  int mx, my;
+  int mx=0, my=0;
 
-  if (0 < dir < 4) {
-    ++mx;
-  } else if (4 < dir) {
-    --mx;
-  }
-  if (dir < 2 || dir > 6) {
+  if (dir==7 || dir==0 || dir==1) {
     ++my;
-  } else if (2 < dir < 6) {
+  } else if (dir==3 || dir==4 || dir==5 ) {
     --my;
+  }
+  if (dir==1 || dir==2 || dir==3) {
+    ++mx;
+  } else if (dir==5 || dir==6 || dir==7) {
+    --mx;
   }
 
   int curpos = (game_state->board_width * y + x);
+  printf("c:%d",curpos);
   int newpos = (curpos + (game_state->board_width * my + mx));
+  printf("n:%d\n",newpos);
 
-  // check if valid
-  if (!(0 <= (x + mx) < game_state->board_width) ||
-      !(0 <= (y + my) < game_state->board_height) ||
+  // check if valid //todo esto esta mal
+  if (!(0 <= (x + mx) && (x + mx) < game_state->board_width) ||
+      !(0 <= (y + my) && (y + my) < game_state->board_height) ||
       game_state->board[newpos] <= 0) {
     ++game_state->players[player].requests_invalid;
     return 0;
@@ -220,15 +223,15 @@ int main(int argc, char **argv) {
       // ejecutar movimiento //
       char buf;
       read(players[current_player].pipe_tx, &buf, 1);
+      sem_post(&game_sync->player_may_move[current_player]);// todo : pregunta, esto puede que tenga que ir antes
+
+      //printf("read:%d",buf);
       if(make_move(current_player, buf, game_state)){ 
         // Valid move
         gettimeofday(&end, NULL);
         elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
-        if(elapsed_s > args.timeout){
+        if(elapsed_s > args.timeout){//timed out
           game_state->game_ended = 1;
-          //logpid();
-          //printf("Valid move Timed out, too slow. Ending game.\n");
-          //return 0;
         }else{
           gettimeofday(&start, NULL);
         }
@@ -236,11 +239,8 @@ int main(int argc, char **argv) {
         // Invalid move
         gettimeofday(&end, NULL);
         elapsed_s = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
-        if(elapsed_s > args.timeout){
+        if(elapsed_s > args.timeout){ //timed out
           game_state->game_ended = 1;
-          //logpid();
-          //printf("Valid move wait Timed out. Ending game.\n");
-          //return 0;
         }
       }
 
@@ -257,9 +257,6 @@ int main(int argc, char **argv) {
     current_player = (current_player + 1) % MAX_PLAYERS;
   }
 
-  logpid();
-  printf("Game ended (╯°□°）╯︵ ┻━┻ \n");
-  
   // Done with semaphores
   sem_destroy(&game_sync->view_should_update);
   sem_destroy(&game_sync->view_did_update);
