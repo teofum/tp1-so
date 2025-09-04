@@ -62,6 +62,24 @@ int make_move(int player, char dir, game_state_t *game_state) {
   return 1;
 }
 
+int player_can_move(game_state_t *game_state, int player_idx) {
+  int can_move = 0;
+
+  player_t *player = &game_state->players[player_idx];
+  for (int i = player->y - 1; i <= player->y + 1 && !can_move; i++) {
+    for (int j = player->x - 1; j <= player->x + 1 && !can_move; j++) {
+      if (i < 0 || j < 0 || i >= game_state->board_height ||
+          j >= game_state->board_width)
+        continue;
+
+      if (game_state->board[i * game_state->board_width + j] > 0)
+        can_move = 1;
+    }
+  }
+
+  return can_move;
+}
+
 /*
  * Main function
  */
@@ -201,6 +219,7 @@ int main(int argc, char **argv) {
       char move;
       int bytes_read = read(players[current_player].pipe_rx, &move, 1);
 
+      // FIXME players should block when they can't make any valid moves
       if (!bytes_read) {
         game_state->players[current_player].blocked = 1;
       }
@@ -217,8 +236,10 @@ int main(int argc, char **argv) {
         }
       }
 
-      // Allow player to move again
-      sem_post(&game_sync->player_may_move[current_player]);
+      // Allow player to move again if it can make valid moves
+      if (player_can_move(game_state, current_player)) {
+        sem_post(&game_sync->player_may_move[current_player]);
+      }
 
       // Release game state lock
       sem_post(&game_sync->game_state_mutex);
@@ -232,6 +253,17 @@ int main(int argc, char **argv) {
       usleep(args.delay * 1000);
     }
     current_player = (current_player + 1) % game_state->n_players;
+
+    // If all players are blocked, end game
+    int all_blocked = 1;
+    for (int i = 0; i < game_state->n_players; i++) {
+      if (!game_state->players[i].blocked) {
+        all_blocked = 0;
+        break;
+      }
+    }
+    if (all_blocked)
+      game_state->game_ended = 1;
   }
   // Habilita todo para que finalize
   sem_post(&game_sync->view_should_update);
