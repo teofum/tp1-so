@@ -213,6 +213,9 @@ int main(int argc, char **argv) {
     FD_ZERO(&current_pipe); // vacia el fd_set
     FD_SET(players[current_player].pipe_rx, &current_pipe);
 
+    // Allow player to move
+    sem_post(&game_sync->player_may_move[current_player]);
+
     int res = select(players[current_player].pipe_rx + 1, &current_pipe, NULL,
                      NULL, &timeout_zero);
     if (res < 0) { // Error
@@ -241,9 +244,6 @@ int main(int argc, char **argv) {
         }
       }
 
-      // Allow player to move again
-      sem_post(&game_sync->player_may_move[current_player]);
-
       // Block player if it can't make valid moves
       if (!player_can_move(game_state, current_player)) {
         game_state->players[current_player].blocked = 1;
@@ -260,6 +260,7 @@ int main(int argc, char **argv) {
 
       usleep(args.delay * 10000);
     }
+
     current_player = (current_player + 1) % game_state->n_players;
 
     // If all players are blocked, end game

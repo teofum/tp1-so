@@ -13,6 +13,9 @@
 #include <unistd.h>
 
 void logpid() { printf("[player: %d] ", getpid()); }
+void logerr(const char *s) {
+  fprintf(stderr, "[player: %d] %s\n", getpid(), s);
+}
 
 // TODO move this to files etc
 
