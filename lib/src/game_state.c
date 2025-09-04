@@ -6,18 +6,18 @@ size_t get_game_state_size(uint16_t board_width, uint16_t board_height) {
   return sizeof(game_state_t) + board_width * board_height * sizeof(int32_t);
 }
 
-void game_state_init(game_state_t *state, const args_t *args){
+void game_state_init(game_state_t *state, const args_t *args) {
   state->board_width = args->width;
   state->board_height = args->height;
   state->game_ended = 0;
 
   // Count players
   uint32_t n_players = 0;
-  for(uint32_t i = 0; args->players[i] != NULL && i < MAX_PLAYERS; i++){
+  for (uint32_t i = 0; args->players[i] != NULL && i < MAX_PLAYERS; i++) {
     n_players++;
   }
 
-  if (n_players == 0){
+  if (n_players == 0) {
     fprintf(stderr, "No players received");
     return;
   }
@@ -33,7 +33,7 @@ void game_state_init(game_state_t *state, const args_t *args){
   }
 
   // Initialize players
-  for(uint32_t i = 0; i < n_players; i++){
+  for (uint32_t i = 0; i < n_players; i++) {
     strncpy(state->players[i].name, args->players[i], MAX_PLAYER_NAME - 1);
     state->players[i].name[MAX_PLAYER_NAME - 1] = '\0';
     state->players[i].score = 0;
@@ -44,7 +44,7 @@ void game_state_init(game_state_t *state, const args_t *args){
 
     // Divide board in (n_players+1) vertical cols
     // (n_players+1) to generate 'margins' and avoid players in border
-    uint16_t col = ((i + 1) * state->board_width)  / (n_players + 1);
+    uint16_t col = ((i + 1) * state->board_width) / (n_players + 1);
 
     // Divide board in (2*n_players) horizontal rows
     // Pick (i*2+1) rows to leave a row empty between players
@@ -55,7 +55,6 @@ void game_state_init(game_state_t *state, const args_t *args){
 
     // Mark player position on the board
     int pos = state->players[i].y * state->board_width + state->players[i].x;
-    state->board[pos] = -(i + 1);
+    state->board[pos] = -i;
   }
 }
-

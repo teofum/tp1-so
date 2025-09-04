@@ -34,6 +34,10 @@ clean:
 	cd lib; make clean
 	rm -rf out
 
+clean_shm:
+	docker exec -it so-builder rm -f /dev/shm/game_state
+	docker exec -it so-builder rm -f /dev/shm/game_sync
+
 docker:
 	docker start so-builder
 

@@ -16,7 +16,7 @@ void logpid() { printf("[player: %d] ", getpid()); }
 
 // TODO move this to files etc
 
-int get_next_move() { return rand() % 8; }
+char get_next_move() { return rand() % 8; }
 
 int main(int argc, char **argv) {
   /*
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
       shm_open_and_map("/game_state", O_RDONLY, game_state_size);
   if (!game_state) {
     logpid();
-    printf("Failed to create shared memory game_state\n");
+    printf("Failed to open shared memory game_state\n");
     return -1;
   }
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
       shm_open_and_map("/game_sync", O_RDWR, sizeof(game_sync_t));
   if (!game_state) {
     logpid();
-    printf("Failed to create shared memory game_sync\n");
+    printf("Failed to open shared memory game_sync\n");
     return -1;
   }
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     }
     sem_post(&game_sync->read_count_mutex);
 
-    int next_move = get_next_move();
+    char next_move = get_next_move();
 
     // Send next move to master
     sem_wait(&game_sync->player_may_move[player_idx]);

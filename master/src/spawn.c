@@ -1,12 +1,14 @@
 #include <spawn.h>
+#include <stdio.h>
 #include <unistd.h>
 
-player_data_t spawn_player(const char *path_to_executable, char *const *argv) {
+player_data_t spawn_player(const char *path_to_executable,
+                           game_state_t *game_state) {
   player_data_t player_data;
-  int pipe_tx[2], pipe_rx[2];
+  int pipe_rx[2];
 
   // Create pipes to communicate with player
-  if (pipe(pipe_tx) == -1 || pipe(pipe_rx) == -1) {
+  if (pipe(pipe_rx) == -1) {
     // Failed to create pipes
     player_data.pid = -1;
     return player_data;
@@ -14,25 +16,23 @@ player_data_t spawn_player(const char *path_to_executable, char *const *argv) {
 
   player_data.pid = fork();
   if (!player_data.pid) {
-    // Connect player stdin to master -> player pipe
-    dup2(pipe_tx[0], 0);
-    // And stdout to player -> master pipe
+    // Map stdout to player -> master pipe
     dup2(pipe_rx[1], 1);
 
-    // Close unused fds (player)
-    close(pipe_tx[1]);
+    // Close unused fd (player)
     close(pipe_rx[0]);
     // TODO: make sure we're not leaking any fds!
 
-    execv(path_to_executable, argv);
+    char child_argv[20][2];
+    sprintf(child_argv[0], "%u", game_state->board_width);
+    sprintf(child_argv[1], "%u", game_state->board_height);
+
+    execl(path_to_executable, path_to_executable, child_argv[0], child_argv[1]);
   }
 
   // Close unused fds (master)
-  close(pipe_tx[0]);
   close(pipe_rx[1]);
 
-  player_data.pipe_tx = pipe_tx[1];
   player_data.pipe_rx = pipe_rx[0];
-
   return player_data;
 }
