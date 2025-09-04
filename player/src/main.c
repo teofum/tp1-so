@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
     // If the game ended or we're blocked, stop
     if (game_state->game_ended || game_state->players[player_idx].blocked) {
       running = 0;
-      fprintf(stderr, "game over\n");
     }
 
     sem_wait(&game_sync->read_count_mutex);
