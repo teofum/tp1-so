@@ -27,7 +27,8 @@ player_data_t spawn_player(const char *path_to_executable,
     sprintf(child_argv[0], "%u", game_state->board_width);
     sprintf(child_argv[1], "%u", game_state->board_height);
 
-    execl(path_to_executable, path_to_executable, child_argv[0], child_argv[1]);
+    int res = execl(path_to_executable, path_to_executable, child_argv[0],
+                    child_argv[1]);
   }
 
   // Close unused fds (master)

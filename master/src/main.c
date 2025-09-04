@@ -148,36 +148,8 @@ int main(int argc, char **argv) {
   game_state_init(game_state, &args);
 
   /*
-   * Fork and exec the view process
+   * Initialize semaphores
    */
-  int view_pid = -1;
-  if (args.view) {
-    usleep(3000000);
-    view_pid = fork();
-    if (view_pid == -1) {
-      logpid();
-      printf("Failed to fork view process\n");
-      return -1;
-    } else if (!view_pid) {
-      execv(args.view, argv);
-    }
-  } else {
-    logpid();
-    printf("No view process given, running headless...\n");
-  }
-
-  /*
-   * Fork and exec player processes
-   */
-  player_data_t players[MAX_PLAYERS];
-  for (int i = 0; i < game_state->n_players; i++) {
-    players[i] = spawn_player(args.players[i], game_state);
-  }
-
-  /*
-   * Process player move requests
-   */
-  // Initialize semaphores in game_sync // 0 locks and 1 unlocks
   sem_init(&game_sync->view_should_update, 1, 0); // 0: view waits for master
   sem_init(&game_sync->view_did_update, 1, 0);    // 0: master waits for view
 
@@ -189,6 +161,44 @@ int main(int argc, char **argv) {
     sem_init(&game_sync->player_may_move[i], 1, 1);
   }
 
+  /*
+   * Fork and exec the view process
+   */
+  logpid();
+  int view_pid = -1;
+  if (args.view) {
+    view_pid = fork();
+    if (view_pid == -1) {
+      logpid();
+      printf("Failed to fork view process\n");
+      return -1;
+    } else if (!view_pid) {
+      char child_argv[20][3];
+      sprintf(child_argv[0], "%u", game_state->board_width);
+      sprintf(child_argv[1], "%u", game_state->board_height);
+
+      execl(args.view, args.view, child_argv[0], child_argv[1]);
+    }
+  } else {
+    logpid();
+    printf("No view process given, running headless...\n");
+  }
+
+  logpid();
+  printf("fork players\n");
+  /*
+   * Fork and exec player processes
+   */
+  player_data_t players[MAX_PLAYERS];
+  for (int i = 0; i < game_state->n_players; i++) {
+    players[i] = spawn_player(args.players[i], game_state);
+  }
+
+  logpid();
+  printf("start\n");
+  /*
+   * Process player move requests
+   */
   // Select setup
   fd_set current_pipe;
   struct timeval timeout_zero = {0}; // para que revise instantaneamente

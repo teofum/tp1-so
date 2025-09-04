@@ -8,7 +8,7 @@
 void gfx_init() {
   // TERM env var is lost when process is spawned from the provided master,
   // causing ncurses init to fail. We set it manually to work around this.
-  setenv("TERM", "xterm-256color", 0);
+  setenv("TERM", "xterm-256color", 1);
 
   (void)initscr();
   (void)nonl();
