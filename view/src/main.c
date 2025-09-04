@@ -78,6 +78,8 @@ int main(int argc, char **argv) {
 
   // Cleanup ncurses
   endwin();
+  shm_unlink("/game_state");
+  shm_unlink("/game_sync");
 
   return 0;
 }

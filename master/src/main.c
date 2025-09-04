@@ -217,12 +217,7 @@ int main(int argc, char **argv) {
 
       // Read move
       char move;
-      int bytes_read = read(players[current_player].pipe_rx, &move, 1);
-
-      // FIXME players should block when they can't make any valid moves
-      if (!bytes_read) {
-        game_state->players[current_player].blocked = 1;
-      }
+      read(players[current_player].pipe_rx, &move, 1);
 
       // Process move
       if (make_move(current_player, move, game_state)) {
@@ -236,9 +231,12 @@ int main(int argc, char **argv) {
         }
       }
 
-      // Allow player to move again if it can make valid moves
-      if (player_can_move(game_state, current_player)) {
-        sem_post(&game_sync->player_may_move[current_player]);
+      // Allow player to move again
+      sem_post(&game_sync->player_may_move[current_player]);
+
+      // Block player if it can't make valid moves
+      if (!player_can_move(game_state, current_player)) {
+        game_state->players[current_player].blocked = 1;
       }
 
       // Release game state lock
@@ -265,14 +263,36 @@ int main(int argc, char **argv) {
     if (all_blocked)
       game_state->game_ended = 1;
   }
+
   // Habilita todo para que finalize
   sem_post(&game_sync->view_should_update);
-  for (int i = 0; i < game_state->n_players; ++i) {
+  for (int i = 0; i < game_state->n_players; i++) {
     sem_post(&game_sync->player_may_move[i]);
   }
 
   logpid();
   printf("Game ended (╯°□°）╯︵ ┻━┻ \n");
+
+  /*
+   * Wait for child processes and clean up resources
+   */
+  if (view_pid != -1) {
+    int ret;
+    waitpid(view_pid, &ret, 0);
+    logpid();
+    printf("View process exited with code %d\n", ret);
+  }
+
+  logpid();
+  printf("Waiting for child processes to end...\n");
+  for (int i = 0; args.players[i] != NULL; i++) {
+    int pid = players[i].pid;
+    int ret;
+    waitpid(pid, &ret, 0);
+    logpid();
+    printf("Player %d process with pid %d exited with code %d\n", i + 1, pid,
+           ret);
+  }
 
   // Done with semaphores
   sem_destroy(&game_sync->view_should_update);
@@ -286,30 +306,10 @@ int main(int argc, char **argv) {
     sem_destroy(&game_sync->player_may_move[i]);
   }
 
-  /*
-   * Wait for child processes and clean up resources
-   */
-  logpid();
-  printf("Waiting for child processes to end...\n");
-  for (int i = 0; args.players[i] != NULL; i++) {
-    int pid = players[i].pid;
-    int ret;
-    waitpid(pid, &ret, 0);
-    logpid();
-    printf("Player %d process with pid %d exited with code %d\n", i + 1, pid,
-           ret);
-  }
-
-  if (view_pid != -1) {
-    int ret;
-    waitpid(view_pid, &ret, 0);
-    logpid();
-    printf("View process exited with code %d\n", ret);
-  }
-
   logpid();
   printf("Unlinking shared memory...\n");
   shm_unlink("/game_state");
+  shm_unlink("/game_sync");
 
   // TODO: free the args once we get the shtuff into shmem
   free_args(&args);

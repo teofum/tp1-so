@@ -75,22 +75,29 @@ int main(int argc, char **argv) {
 
     // Read game state here
 
+    if (game_state->game_ended) {
+      running = 0;
+      fprintf(stderr, "game over\n");
+    }
+
     sem_wait(&game_sync->read_count_mutex);
     if (--game_sync->read_count == 0) {
       sem_post(&game_sync->game_state_mutex);
     }
     sem_post(&game_sync->read_count_mutex);
 
+    if (!running)
+      break;
+
     char next_move = get_next_move();
 
     // Send next move to master
     sem_wait(&game_sync->player_may_move[player_idx]);
     write(STDOUT_FILENO, &next_move, 1);
-
-    if (game_state->game_ended) {
-      running = 0;
-    }
   }
+
+  shm_unlink("/game_state");
+  shm_unlink("/game_sync");
 
   return 0;
 }
