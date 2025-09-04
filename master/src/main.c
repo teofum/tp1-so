@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
         sem_wait(&game_sync->view_did_update);
       }
 
-      usleep(args.delay * 1000);
+      usleep(args.delay * 10000);
     }
     current_player = (current_player + 1) % game_state->n_players;
 
@@ -279,9 +279,6 @@ int main(int argc, char **argv) {
   for (int i = 0; i < game_state->n_players; i++) {
     sem_post(&game_sync->player_may_move[i]);
   }
-
-  logpid();
-  printf("Game ended (╯°□°）╯︵ ┻━┻ \n");
 
   /*
    * Wait for child processes and clean up resources
