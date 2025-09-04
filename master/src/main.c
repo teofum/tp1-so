@@ -123,9 +123,6 @@ int main(int argc, char **argv) {
   /*
    * Set up shared memory
    */
-  logpid();
-  printf("Creating shared memory...\n");
-
   game_state_t *game_state =
       shm_open_and_map("/game_state", O_RDWR | O_CREAT,
                        get_game_state_size(args.width, args.height));
@@ -184,8 +181,6 @@ int main(int argc, char **argv) {
     printf("No view process given, running headless...\n");
   }
 
-  logpid();
-  printf("fork players\n");
   /*
    * Fork and exec player processes
    */
@@ -194,8 +189,6 @@ int main(int argc, char **argv) {
     players[i] = spawn_player(args.players[i], game_state);
   }
 
-  logpid();
-  printf("start\n");
   /*
    * Process player move requests
    */

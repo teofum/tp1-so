@@ -21,7 +21,12 @@ player_data_t spawn_player(const char *path_to_executable,
 
     // Close unused fd (player)
     close(pipe_rx[0]);
-    // TODO: make sure we're not leaking any fds!
+
+    // Close unused fds from previously spawned players
+    // player doesn't need any fds other than stdin/stdout/stderr
+    for (int i = 3; i < 3 + MAX_PLAYERS * 2; i++) {
+      close(i);
+    }
 
     char child_argv[20][2];
     sprintf(child_argv[0], "%u", game_state->board_width);
