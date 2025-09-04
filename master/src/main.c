@@ -44,7 +44,6 @@ int make_move(int player, char dir, game_state_t *game_state) {
   int curpos = game_state->board_width * y + x;
   int newpos = curpos + (game_state->board_width * my + mx);
 
-  // check if valid //todo esto esta mal
   if (!(0 <= (x + mx) && (x + mx) < game_state->board_width) ||
       !(0 <= (y + my) && (y + my) < game_state->board_height) ||
       game_state->board[newpos] <= 0) {
@@ -52,7 +51,7 @@ int make_move(int player, char dir, game_state_t *game_state) {
     return 0;
   }
 
-  ++game_state->players[player].requests_valid;
+  game_state->players[player].requests_valid++;
 
   game_state->players[player].score += game_state->board[newpos];
   game_state->board[newpos] = -player;
@@ -87,7 +86,7 @@ int main(int argc, char **argv) {
   logpid();
   printf("Delay %ums\n", args.delay);
   logpid();
-  printf("Timeout %ums\n", args.timeout);
+  printf("Timeout %us\n", args.timeout);
   logpid();
   printf("Seed %d\n", args.seed);
 
@@ -200,24 +199,19 @@ int main(int argc, char **argv) {
 
       // Read move
       char move;
-      read(players[current_player].pipe_rx, &move, 1);
+      int bytes_read = read(players[current_player].pipe_rx, &move, 1);
+
+      if (!bytes_read) {
+        game_state->players[current_player].blocked = 1;
+      }
 
       // Process move
       if (make_move(current_player, move, game_state)) {
-        // Valid move
-        gettimeofday(&end, NULL);
-        elapsed_s = (end.tv_sec - start.tv_sec) +
-                    (end.tv_usec - start.tv_usec) / 1000000.0;
-        if (elapsed_s > args.timeout) { // timed out
-          game_state->game_ended = 1;
-        } else {
-          gettimeofday(&start, NULL);
-        }
+        gettimeofday(&start, NULL);
       } else {
         // Invalid move
         gettimeofday(&end, NULL);
-        elapsed_s = (end.tv_sec - start.tv_sec) +
-                    (end.tv_usec - start.tv_usec) / 1000000.0;
+        elapsed_s = end.tv_sec - start.tv_sec;
         if (elapsed_s > args.timeout) { // timed out
           game_state->game_ended = 1;
         }
@@ -229,7 +223,7 @@ int main(int argc, char **argv) {
       // Release game state lock
       sem_post(&game_sync->game_state_mutex);
 
-      // view //
+      // Signal view to update, wait for view and delay
       if (view_pid != -1) {
         sem_post(&game_sync->view_should_update);
         sem_wait(&game_sync->view_did_update);
@@ -237,8 +231,6 @@ int main(int argc, char **argv) {
 
       usleep(args.delay * 1000);
     }
-    // Current_player todavia no esta listo para lectura
-    // veo el proximo
     current_player = (current_player + 1) % game_state->n_players;
   }
   // Habilita todo para que finalize
