@@ -8,7 +8,7 @@
 void gfx_init() {
   // TERM env var is lost when process is spawned from the provided master,
   // causing ncurses init to fail. We set it manually to work around this.
-  setenv("TERM", "xterm-256color", 0);
+  setenv("TERM", "xterm-256color", 1);
 
   (void)initscr();
   (void)nonl();
@@ -61,20 +61,7 @@ static void get_cell_contents(char *buf, int value, int i, int j,
   if (value > 0) {
     sprintf(buf, " %d ", value);
   } else if (player_is_here) {
-    // this is super inefficient! but computers are fast :)
-    int blocked = 1;
-    for (int ii = i - 1; ii < i + 2; ii++) {
-      for (int jj = j - 1; jj < j + 2; jj++) {
-        if (ii < 0 || ii >= game_state->board_height || jj < 0 ||
-            jj > game_state->board_width)
-          continue;
-        int local_value = game_state->board[ii * game_state->board_width + jj];
-        if (local_value > 0)
-          blocked = 0;
-      }
-    }
-
-    sprintf(buf, blocked ? "-.-" : "o.o");
+    sprintf(buf, game_state->players[player_idx].blocked ? "-.-" : "o.o");
   } else {
     sprintf(buf, "   ");
   }
