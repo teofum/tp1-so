@@ -19,7 +19,34 @@ void logerr(const char *s) {
 
 // TODO move this to files etc
 
-char get_next_move() { return rand() % 8; }
+// Convert diff 'x and y' into char dir
+// !Asume que no hay dx=dy=0 que no deberia pasar
+char getDir(int dx, int dy){
+  char dirs[3][3] ={{7,0,1},
+                    {6,8,2},
+                    {5,4,3}};
+  return dirs[++dy][++dx];
+}
+
+// en el gs tengo el player y el board
+char get_next_move(game_state_t* game_state, int player_idx) {
+  char next;
+  int maxp=-1;
+
+  uint16_t x = game_state->players[player_idx].x;
+  uint16_t y = game_state->players[player_idx].y;
+
+  for(int dy=-1; dy<=1; ++dy ){
+    for(int dx=-1; dx<=1; ++dx){
+      int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
+      if(game_state->board[kernelIndex]>maxp){
+        next=getDir(dx,dy);
+      }
+    }
+  }
+
+  return next; 
+}
 
 int main(int argc, char **argv) {
   /*
@@ -92,7 +119,7 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    char next_move = get_next_move();
+    char next_move = get_next_move(game_state,player_idx);
 
     // Send next move to master
     sem_wait(&game_sync->player_may_move[player_idx]);
