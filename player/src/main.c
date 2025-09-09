@@ -23,23 +23,24 @@ void logerr(const char *s) {
 // !Asume que no hay dx=dy=0 que no deberia pasar
 char getDir(int dx, int dy){
   char dirs[3][3] ={{7,0,1},
-                    {6,8,2},
+                    {6,0,2},
                     {5,4,3}};
-  return dirs[++dy][++dx];
-}
+  return dirs[dy + 1][dx + 1];
+}//2 = [1][2] // dy=0 dx=1
 
 // en el gs tengo el player y el board
 char get_next_move(game_state_t* game_state, int player_idx) {
-  char next;
-  int maxp=-1;
+  char next=0;
+  int maxp=0;
 
-  uint16_t x = game_state->players[player_idx].x;
-  uint16_t y = game_state->players[player_idx].y;
+  int x = game_state->players[player_idx].x;
+  int y = game_state->players[player_idx].y;
 
   for(int dy=-1; dy<=1; ++dy ){
     for(int dx=-1; dx<=1; ++dx){
       int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
       if(game_state->board[kernelIndex]>maxp){
+        maxp=game_state->board[kernelIndex];
         next=getDir(dx,dy);
       }
     }

@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
   while (!game_state->game_ended) {
     FD_ZERO(&current_pipe); // vacia el fd_set
     FD_SET(players[current_player].pipe_rx, &current_pipe);
-
+    usleep(args.delay * 2000);
     // Allow player to move
     sem_post(&game_sync->player_may_move[current_player]);
 
@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
         sem_wait(&game_sync->view_did_update);
       }
 
-      usleep(args.delay * 10000);
+      usleep(args.delay * 2000);
     }
 
     current_player = (current_player + 1) % game_state->n_players;
