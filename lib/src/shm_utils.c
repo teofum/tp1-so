@@ -1,7 +1,4 @@
 #include <shm_utils.h>
-#include <sys/fcntl.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
 void *shm_open_and_map(const char *name, int mode, size_t size) {
   int fd = shm_open(name, mode, 0);
