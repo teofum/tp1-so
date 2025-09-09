@@ -1,3 +1,4 @@
+#include "game.h"
 #include <args.h>
 #include <game_state.h>
 #include <game_sync.h>
@@ -84,78 +85,18 @@ int player_can_move(game_state_t *game_state, int player_idx) {
  * Main function
  */
 int main(int argc, char **argv) {
-  /*
-   * Parse command line args
-   */
+  const char *err;
+
   args_t args;
-  const char *parse_err = NULL;
-  if (!parse_args(argc, argv, &args, &parse_err)) {
-    free_args(&args);
-    printf("Failed to parse args: %s\n", parse_err);
+  if (!parse_args(argc, argv, &args, &err)) {
+    fprintf(stderr, "Parse error: %s", err);
     return -1;
   }
 
-  /*
-   * Print the args we received
-   * TODO: remove this debug code
-   */
-  logpid();
-  printf("Board size %ux%u\n", args.width, args.height);
-  logpid();
-  printf("Delay %ums\n", args.delay);
-  logpid();
-  printf("Timeout %us\n", args.timeout);
-  logpid();
-  printf("Seed %d\n", args.seed);
-
-  if (args.view) {
-    logpid();
-    printf("View executable %s\n", args.view);
-  }
-
-  for (int i = 0; args.players[i] != NULL; i++) {
-    logpid();
-    printf("Player %d: %s\n", i + 1, args.players[i]);
-  }
-
-  printf("\n");
-
-  /*
-   * Set up shared memory
-   */
-  game_state_t *game_state =
-      shm_open_and_map("/game_state", O_RDWR | O_CREAT,
-                       get_game_state_size(args.width, args.height));
-  if (!game_state) {
-    logpid();
-    printf("Failed to create shared memory game_state\n");
+  game_t game;
+  if (!game_init(&game, &args)) {
+    fprintf(stderr, "%s", err);
     return -1;
-  }
-
-  game_sync_t *game_sync =
-      shm_open_and_map("/game_sync", O_RDWR | O_CREAT, sizeof(game_sync_t));
-  if (!game_state) {
-    logpid();
-    printf("Failed to create shared memory game_sync\n");
-    return -1;
-  }
-
-  logpid();
-  printf("Initializing game state...\n");
-  game_state_init(game_state, &args);
-
-  /*
-   * Initialize semaphores
-   */
-  sem_init(&game_sync->view_should_update, 1, 0); // 0: view waits for master
-  sem_init(&game_sync->view_did_update, 1, 0);    // 0: master waits for view
-
-  sem_init(&game_sync->master_write_mutex, 1, 1); // 1: unlocked
-  sem_init(&game_sync->game_state_mutex, 1, 1);   // 1: unlocked
-  sem_init(&game_sync->read_count_mutex, 1, 1);   // 1: unlocked
-
-  for (int i = 0; i < game_state->n_players; ++i) {
-    sem_init(&game_sync->player_may_move[i], 1, 1);
   }
 
   /*
@@ -286,7 +227,7 @@ int main(int argc, char **argv) {
 
   logpid();
   printf("Waiting for child processes to end...\n");
-  for (int i = 0; args.players[i] != NULL; i++) {
+  for (int i = 0; i < game_state->n_players; i++) {
     int pid = players[i].pid;
     int ret;
     waitpid(pid, &ret, 0);
@@ -295,17 +236,7 @@ int main(int argc, char **argv) {
            ret);
   }
 
-  // Done with semaphores
-  sem_destroy(&game_sync->view_should_update);
-  sem_destroy(&game_sync->view_did_update);
-
-  sem_destroy(&game_sync->master_write_mutex);
-  sem_destroy(&game_sync->game_state_mutex);
-  sem_destroy(&game_sync->read_count_mutex);
-
-  for (int i = 0; i < game_state->n_players; ++i) {
-    sem_destroy(&game_sync->player_may_move[i]);
-  }
+  game_sync_free(game_sync, game_state->n_players);
 
   logpid();
   printf("Unlinking shared memory...\n");
