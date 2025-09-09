@@ -22,31 +22,45 @@ void logerr(const char *s) {
 // Convert diff 'x and y' into char dir
 // !Asume que no hay dx=dy=0 que no deberia pasar
 char getDir(int dx, int dy){
-  char dirs[3][3] ={{7,0,1},
-                    {6,0,2},
-                    {5,4,3}};
+  char dirs[3][3] ={{7, 0,1},
+                    {6,-1,2},
+                    {5, 4,3}};
+
   return dirs[dy + 1][dx + 1];
 }//2 = [1][2] // dy=0 dx=1
 
+// returns 0 if out of bounds
+int inBounds(int x,int y, game_state_t* gs){
+  if( x < 0 || y < 0 || x >= gs->board_width || y >= gs->board_height){
+  return 0;
+  }
+  return 1;
+}
+
 // en el gs tengo el player y el board
+// LA POSICION DEL PLAYER NO SE UPDATEA PARA CUANDO ESTE ARRANCA A CORRER
 char get_next_move(game_state_t* game_state, int player_idx) {
-  char next=0;
-  int maxp=0;
+  char next=-1;
+  int maxp=-1;
 
   int x = game_state->players[player_idx].x;
   int y = game_state->players[player_idx].y;
 
-  for(int dy=-1; dy<=1; ++dy ){
+  for(int dy=-1; dy<=1; ++dy){
     for(int dx=-1; dx<=1; ++dx){
-      int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
-      if(game_state->board[kernelIndex]>maxp){
-        maxp=game_state->board[kernelIndex];
-        next=getDir(dx,dy);
-      }
+      if( inBounds( x + dx, y + dy, game_state ) ){
+        int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
+        if(game_state->board[kernelIndex]>maxp){
+          
+          next=getDir(dx,dy);
+          maxp=game_state->board[kernelIndex];
+        
+        }
+      }    
     }
   }
-
-  return next; 
+  
+  return next;
 }
 
 int main(int argc, char **argv) {
@@ -119,6 +133,10 @@ int main(int argc, char **argv) {
 
     if (!running)
       break;
+
+    wait(&game_sync->game_state_mutex);
+    post(&game_sync->game_state_mutex);
+    // Wait for master to update the board before computing next
 
     char next_move = get_next_move(game_state,player_idx);
 
