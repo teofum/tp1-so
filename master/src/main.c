@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
       return -1;
     } else if (res > 0) {
       // Read move
-      move_t move;
+      char move;
       read(player_pipes[current_player], &move, 1);
 
       if (process_move(game, current_player, move)) {
