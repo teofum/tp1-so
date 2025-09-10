@@ -19,7 +19,7 @@ typedef void (*player_wait_callback_t)(player_t *player, int ret);
  * Create a players object, spawn all player processes and configure pipes.
  * Initializes player order (round-robin).
  */
-players_t players_create(game_state_t *game_state, args_t *args);
+players_t players_create(game_t game, args_t *args);
 
 /*
  * Checks whether the next player in the round order has sent a move. The index

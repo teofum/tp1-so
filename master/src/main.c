@@ -2,10 +2,11 @@
 #include <move.h>
 #include <players.h>
 #include <spawn.h>
-#include <sys/wait.h>
 #include <timeout.h>
+#include <view.h>
 
 #include <stdio.h>
+#include <sys/wait.h>
 
 /*
  * Main function
@@ -33,14 +34,10 @@ int main(int argc, char **argv) {
   game_state_t *state = game_state(game);
 
   /*
-   * Fork and exec processes
+   * Spawn view and players
    */
-  int view_pid = -1;
-  if (args.view) {
-    view_pid = spawn_view(args.view, state);
-  }
-
-  players_t players = players_create(state, &args);
+  view_t view = view_create(game, &args);
+  players_t players = players_create(game, &args);
 
   /*
    * Timeout
@@ -63,13 +60,9 @@ int main(int argc, char **argv) {
       if (process_move(game, current_player, move)) {
         timeout_reset(timeout);
       }
-
-      // Signal view to update, wait for view and delay
-      if (view_pid != -1)
-        game_update_view(game);
-
-      usleep(args.delay * 10000);
     }
+
+    view_update(view);
 
     if (players_all_blocked(players) || timeout_check(timeout))
       game_end(game);
@@ -78,11 +71,7 @@ int main(int argc, char **argv) {
   /*
    * Wait for child processes and clean up resources
    */
-  if (view_pid != -1) {
-    int ret;
-    waitpid(view_pid, &ret, 0);
-  }
-
+  view_wait(view, NULL);
   players_wait_all(players, NULL);
   game_destroy(game);
 

@@ -12,17 +12,18 @@ struct players_cdt_t {
   game_state_t *game_state;
 };
 
-players_t players_create(game_state_t *game_state, args_t *args) {
+players_t players_create(game_t game, args_t *args) {
   players_t players = malloc(sizeof(struct players_cdt_t));
   if (!players)
     return NULL;
 
-  for (int i = 0; i < game_state->n_players; i++) {
-    players->pipe_fds[i] = spawn_player(args->players[i], game_state, i);
+  game_state_t *state = game_state(game);
+  for (int i = 0; i < state->n_players; i++) {
+    players->pipe_fds[i] = spawn_player(args->players[i], state, i);
   }
 
   players->current_player_idx = 0;
-  players->game_state = game_state;
+  players->game_state = state;
 
   return players;
 }
