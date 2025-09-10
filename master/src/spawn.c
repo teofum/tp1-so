@@ -12,21 +12,21 @@ static int exec_with_board_size(const char *path, game_state_t *game_state) {
 
 int spawn_player(const char *path_to_executable, game_state_t *game_state,
                  size_t i) {
-  int pipe_rx[2];
+  int player_pipe[2];
 
   // Create pipe to communicate with player
-  if (pipe(pipe_rx) == -1) {
+  if (pipe(player_pipe) == -1) {
     return -1; // Failed to create pipe
   }
 
   pid_t pid = fork();
   if (!pid) {
     // Map stdout to player -> master pipe
-    dup2(pipe_rx[1], 1);
+    dup2(player_pipe[1], 1);
 
     // Close unused fds from previously spawned players
     // player doesn't need any fds other than stdin/stdout/stderr
-    for (int i = 3; i < pipe_rx[1]; i++) {
+    for (int i = 3; i < player_pipe[1]; i++) {
       close(i);
     }
 
@@ -39,12 +39,12 @@ int spawn_player(const char *path_to_executable, game_state_t *game_state,
 
   // Close unused write end fd (master)
   // For some reason, this causes all players to write to the same pipe
-  // wtf??
+  // wtf?? FIXME
   // close(pipe_rx[1]);
 
   // Return read end
   game_state->players[i].pid = pid;
-  return pipe_rx[0];
+  return player_pipe[0];
 }
 
 pid_t spawn_view(const char *path_to_executable, game_state_t *game_state) {
