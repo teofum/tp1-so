@@ -1,8 +1,8 @@
 #include <game.h>
 #include <game_state_impl.h>
 #include <game_sync.h>
-
 #include <shm.h>
+
 #include <stdlib.h>
 
 /*

@@ -1,13 +1,16 @@
+/*
+ * Wrapper API for POSIX shared memory syscalls.
+ */
+
 #ifndef SHM_H
 #define SHM_H
 
 #include <stddef.h>
-#include <sys/fcntl.h>
 
 typedef enum {
-  SHM_READ = O_RDONLY,
-  SHM_READ_WRITE = O_RDWR,
-  SHM_CREATE = O_CREAT | O_EXCL,
+  SHM_READ = 0,
+  SHM_READ_WRITE = 0x1,
+  SHM_CREATE = 0x2,
 } shm_mode_t;
 
 /*

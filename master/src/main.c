@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   args_t args;
   if (!parse_args(argc, argv, &args, &err)) {
     free_args(&args);
-    fprintf(stderr, "Parse error: %s", err);
+    fprintf(stderr, "Parse error: %s\n", err);
     return -1;
   }
 
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   game_t game = game_init(&args);
   if (!game) {
     free_args(&args);
-    fprintf(stderr, "%s", err);
+    fprintf(stderr, "Game initialization failed: unknown\n");
     return -1;
   }
 
