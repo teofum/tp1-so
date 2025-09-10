@@ -1,10 +1,9 @@
 #include <game.h>
 #include <move.h>
 #include <spawn.h>
+#include <timeout.h>
 
 #include <stdio.h>
-#include <sys/time.h> // TODO ; esto noc si va aca
-#include <sys/wait.h>
 
 void logpid() { printf("[master: %d] ", getpid()); }
 
@@ -17,6 +16,7 @@ int main(int argc, char **argv) {
   // Parse args
   args_t args;
   if (!parse_args(argc, argv, &args, &err)) {
+    free_args(&args);
     fprintf(stderr, "Parse error: %s", err);
     return -1;
   }
@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
   // Initialize game
   game_t game = game_init(&args);
   if (!game) {
+    free_args(&args);
     fprintf(stderr, "%s", err);
     return -1;
   }
@@ -48,17 +49,18 @@ int main(int argc, char **argv) {
   }
 
   /*
+   * Timeout
+   */
+  timeout_t timeout = timeout_create(args.timeout);
+  free_args(&args);
+
+  /*
    * Process player move requests
    */
   // Select setup
   fd_set current_pipe;
   struct timeval timeout_zero = {0}; // para que revise instantaneamente
   int current_player = 0;
-
-  // Timeout
-  struct timeval start, end;
-  long elapsed_s;
-  gettimeofday(&start, NULL);
 
   while (!state->game_ended) {
     FD_ZERO(&current_pipe); // vacia el fd_set
@@ -76,7 +78,7 @@ int main(int argc, char **argv) {
       read(player_pipes[current_player], &move, 1);
 
       if (process_move(game, current_player, move)) {
-        gettimeofday(&start, NULL);
+        timeout_reset(timeout);
       }
 
       // Signal view to update, wait for view and delay
@@ -88,14 +90,6 @@ int main(int argc, char **argv) {
 
     current_player = (current_player + 1) % state->n_players;
 
-    // Check timeout
-    gettimeofday(&end, NULL);
-    elapsed_s = end.tv_sec - start.tv_sec;
-    if (elapsed_s > args.timeout) {
-      game_end(game);
-    }
-
-    // If all players are blocked, end game
     int all_blocked = 1;
     for (int i = 0; i < state->n_players; i++) {
       if (!state->players[i].blocked) {
@@ -104,7 +98,7 @@ int main(int argc, char **argv) {
       }
     }
 
-    if (all_blocked)
+    if (all_blocked || timeout_check(timeout))
       game_end(game);
   }
 
@@ -129,9 +123,6 @@ int main(int argc, char **argv) {
   }
 
   game_destroy(game);
-
-  // TODO: free the args once we get the shtuff into shmem
-  free_args(&args);
 
   logpid();
   printf("Bye!\n");

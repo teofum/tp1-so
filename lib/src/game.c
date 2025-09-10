@@ -19,6 +19,8 @@ struct game_cdt_t {
  */
 game_t game_init(args_t *args) {
   game_t game = malloc(sizeof(struct game_cdt_t));
+  if (!game)
+    return NULL;
 
   // Calculate game state struct size
   game->state_size = get_game_state_size(args->width, args->height);
@@ -46,6 +48,8 @@ game_t game_init(args_t *args) {
  */
 game_t game_connect(uint32_t width, uint32_t height) {
   game_t game = malloc(sizeof(struct game_cdt_t));
+  if (!game)
+    return NULL;
 
   game->state_size = get_game_state_size(width, height);
   game->state = shm_open_and_map("/game_state", O_RDONLY, game->state_size);
