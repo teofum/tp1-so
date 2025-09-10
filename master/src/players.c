@@ -53,6 +53,15 @@ int players_next(players_t players, uint32_t *next_player, move_t *move) {
   return res;
 }
 
+int players_all_blocked(players_t players) {
+  for (int i = 0; i < players->game_state->n_players; i++) {
+    if (!players->game_state->players[i].blocked)
+      return 0;
+  }
+
+  return 1;
+}
+
 void players_wait_all(players_t players, player_wait_callback_t callback) {
   int ret;
   for (int i = 0; i < players->game_state->n_players; i++) {

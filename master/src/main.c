@@ -7,8 +7,6 @@
 
 #include <stdio.h>
 
-void logpid() { printf("[master: %d] ", getpid()); }
-
 /*
  * Main function
  */
@@ -40,9 +38,6 @@ int main(int argc, char **argv) {
   int view_pid = -1;
   if (args.view) {
     view_pid = spawn_view(args.view, state);
-  } else {
-    logpid();
-    printf("No view process given, running headless...\n");
   }
 
   players_t players = players_create(state, &args);
@@ -54,7 +49,7 @@ int main(int argc, char **argv) {
   free_args(&args);
 
   /*
-   * Process player move requests
+   * Process player move requests until game ends
    */
   uint32_t current_player;
   move_t move;
@@ -76,37 +71,20 @@ int main(int argc, char **argv) {
       usleep(args.delay * 10000);
     }
 
-    current_player = (current_player + 1) % state->n_players;
-
-    int all_blocked = 1;
-    for (int i = 0; i < state->n_players; i++) {
-      if (!state->players[i].blocked) {
-        all_blocked = 0;
-        break;
-      }
-    }
-
-    if (all_blocked || timeout_check(timeout))
+    if (players_all_blocked(players) || timeout_check(timeout))
       game_end(game);
   }
 
   /*
    * Wait for child processes and clean up resources
    */
-  int ret;
   if (view_pid != -1) {
+    int ret;
     waitpid(view_pid, &ret, 0);
-    logpid();
-    printf("View process exited with code %d\n", ret);
   }
 
   players_wait_all(players, NULL);
-  // logpid();
-  // printf("Player %d with pid %d exited with code %d\n", i + 1, pid, ret);
-
   game_destroy(game);
 
-  logpid();
-  printf("Bye!\n");
   return 0;
 }

@@ -32,6 +32,11 @@ players_t players_create(game_state_t *game_state, args_t *args);
 int players_next(players_t players, uint32_t *next_player, move_t *move);
 
 /*
+ * Returns 1 if all players are blocked, otherwise returns 0.
+ */
+int players_all_blocked(players_t players);
+
+/*
  * Wait for all player processes to end, close their respective fds and destroy
  * the players object.
  * Optionally accepts a function to be called upon each player exiting.
