@@ -140,6 +140,10 @@ int main(int argc, char **argv) {
       char move;
       read(player_pipes[current_player], &move, 1);
 
+      if (state->players[current_player].blocked) {
+        printf("blocked player %d moved!!! %d\n", current_player, (int)move);
+      }
+
       // Process move
       if (make_move(current_player, move, state)) {
         gettimeofday(&start, NULL);

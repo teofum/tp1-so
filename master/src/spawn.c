@@ -24,12 +24,9 @@ int spawn_player(const char *path_to_executable, game_state_t *game_state,
     // Map stdout to player -> master pipe
     dup2(pipe_rx[1], 1);
 
-    // Close unused read end fd (player)
-    close(pipe_rx[0]);
-
     // Close unused fds from previously spawned players
     // player doesn't need any fds other than stdin/stdout/stderr
-    for (int i = 3; i < 3 + MAX_PLAYERS * 2; i++) {
+    for (int i = 3; i < pipe_rx[1]; i++) {
       close(i);
     }
 
@@ -38,7 +35,9 @@ int spawn_player(const char *path_to_executable, game_state_t *game_state,
   }
 
   // Close unused write end fd (master)
-  close(pipe_rx[1]);
+  // For some reason, this causes all players to write to the same pipe
+  // wtf??
+  // close(pipe_rx[1]);
 
   // Return read end
   game_state->players[i].pid = pid;

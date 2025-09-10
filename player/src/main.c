@@ -24,8 +24,7 @@ int main(int argc, char **argv) {
 
   game_t game = game_connect(width, height);
   if (!game) {
-    logpid();
-    printf("Failed to connect to game\n");
+    logerr("Failed to connect to game\n");
     return -1;
   }
 
