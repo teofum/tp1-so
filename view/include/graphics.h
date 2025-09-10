@@ -1,7 +1,8 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#include "game_state.h"
+#include <game_state.h>
+
 #define C_GRAY 20
 #define CP_GRAYSCALE 1
 

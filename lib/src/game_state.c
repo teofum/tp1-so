@@ -1,4 +1,4 @@
-#include <game_state.h>
+#include <game_state_impl.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -40,7 +40,6 @@ void game_state_init(game_state_t *state, const args_t *args) {
     state->players[i].requests_invalid = 0;
     state->players[i].requests_valid = 0;
     state->players[i].blocked = 0;
-    // state->players[i].pid = 0; Set by master, need to be initialize?
 
     // Divide board in (n_players+1) vertical cols
     // (n_players+1) to generate 'margins' and avoid players in border
