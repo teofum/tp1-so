@@ -1,16 +1,7 @@
 #include <args.h>
-#include <game_state.h>
-#include <game_sync.h>
-#include <shm_utils.h>
+#include <game.h>
 
-#include <semaphore.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
 void logpid() { printf("[player: %d] ", getpid()); }
 void logerr(const char *s) {
@@ -30,34 +21,23 @@ int main(int argc, char **argv) {
   }
   int width = atoi(argv[1]);
   int height = atoi(argv[2]);
-  size_t game_state_size = get_game_state_size(width, height);
 
-  /*
-   * Set up shared memory
-   */
-  game_state_t *game_state =
-      shm_open_and_map("/game_state", O_RDONLY, game_state_size);
-  if (!game_state) {
+  game_t game = game_connect(width, height);
+  if (!game) {
     logpid();
-    printf("Failed to open shared memory game_state\n");
+    printf("Failed to connect to game\n");
     return -1;
   }
 
-  game_sync_t *game_sync =
-      shm_open_and_map("/game_sync", O_RDWR, sizeof(game_sync_t));
-  if (!game_state) {
-    logpid();
-    printf("Failed to open shared memory game_sync\n");
-    return -1;
-  }
+  // Pointer to game state for convenience
+  // This is the actual shared state, be careful when reading it!
+  game_state_t *state = game_state(game);
 
-  int player_idx = 0;
+  int player_idx = -1;
   int pid = getpid();
-  for (int i = 0; i < game_state->n_players; i++) {
-    if (game_state->players[i].pid == pid) {
+  for (int i = 0; i < state->n_players && player_idx == -1; i++) {
+    if (state->players[i].pid == pid)
       player_idx = i;
-      break;
-    }
   }
 
   /*
@@ -65,29 +45,15 @@ int main(int argc, char **argv) {
    */
   int running = 1;
   while (running) {
-    // Sync with master to allow it to write to game state
-    sem_wait(&game_sync->master_write_mutex);
-    sem_post(&game_sync->master_write_mutex);
-
-    // Lightswitch sync
-    sem_wait(&game_sync->read_count_mutex);
-    if (game_sync->read_count++ == 0) {
-      sem_wait(&game_sync->game_state_mutex);
-    }
-    sem_post(&game_sync->read_count_mutex);
-
-    // Read game state here
+    game_wait_move_processed(game, player_idx);
+    game_will_read_state(game);
 
     // If the game ended or we're blocked, stop
-    if (game_state->game_ended || game_state->players[player_idx].blocked) {
+    if (state->game_ended || state->players[player_idx].blocked) {
       running = 0;
     }
 
-    sem_wait(&game_sync->read_count_mutex);
-    if (--game_sync->read_count == 0) {
-      sem_post(&game_sync->game_state_mutex);
-    }
-    sem_post(&game_sync->read_count_mutex);
+    game_did_read_state(game);
 
     if (!running)
       break;
@@ -95,12 +61,10 @@ int main(int argc, char **argv) {
     char next_move = get_next_move();
 
     // Send next move to master
-    sem_wait(&game_sync->player_may_move[player_idx]);
     write(STDOUT_FILENO, &next_move, 1);
   }
 
-  shm_unlink("/game_state");
-  shm_unlink("/game_sync");
+  game_disconnect(game);
 
   return 0;
 }

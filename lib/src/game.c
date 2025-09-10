@@ -1,49 +1,151 @@
-#include "game.h"
-#include "game_sync.h"
-#include "shm_utils.h"
+#include <game.h>
+#include <game_state_impl.h>
+#include <game_sync.h>
+#include <shm_utils.h>
+#include <stdlib.h>
 
-int game_init(game_t *game, args_t *args) {
-  /*
-   * Set up shared memory
-   */
+/*
+ * CDT for game ADT
+ */
+struct game_cdt_t {
+  game_state_t *state;
+  game_sync_t *sync;
+
+  size_t state_size;
+};
+
+/*
+ * Initialize game, used by master
+ */
+game_t game_init(args_t *args) {
+  game_t game = malloc(sizeof(struct game_cdt_t));
+
+  // Calculate game state struct size
+  game->state_size = get_game_state_size(args->width, args->height);
+
+  // Create and map shared memory
   game->state =
-      shm_open_and_map("/game_state", O_RDWR | O_CREAT,
-                       get_game_state_size(args->width, args->height));
+      shm_open_and_map("/game_state", O_RDWR | O_CREAT, game->state_size);
   if (!game->state)
-    return 0;
+    return NULL;
 
   game->sync =
       shm_open_and_map("/game_sync", O_RDWR | O_CREAT, sizeof(game_sync_t));
   if (!game->sync)
-    return 0;
+    return NULL;
 
+  // Initialize game
   game_state_init(game->state, args);
   game_sync_init(game->sync, game->state->n_players);
 
-  return 1;
+  return game;
 }
 
-int game_connect(game_t *game, uint32_t width, uint32_t height) {
-  game->state = shm_open_and_map("/game_state", O_RDONLY,
-                                 get_game_state_size(width, height));
+/*
+ * Connect to existing game, used by view/players
+ */
+game_t game_connect(uint32_t width, uint32_t height) {
+  game_t game = malloc(sizeof(struct game_cdt_t));
+
+  game->state_size = get_game_state_size(width, height);
+  game->state = shm_open_and_map("/game_state", O_RDONLY, game->state_size);
   if (!game->state)
-    return 0;
+    return NULL;
 
   game->sync = shm_open_and_map("/game_sync", O_RDWR, sizeof(game_sync_t));
   if (!game->sync)
-    return 0;
+    return NULL;
 
-  return 1;
+  return game;
 }
 
-void game_disconnect(game_t *game) {
+/*
+ * Disconnect from a game, used by view/players
+ */
+void game_disconnect(game_t game) {
   shm_unlink("/game_state");
   shm_unlink("/game_sync");
 
   game->state = NULL;
   game->sync = NULL;
+
+  free(game);
 }
 
-void game_destroy(game_t *game) {
+/*
+ * Disconnect from a game and destroy it, used by master
+ * This should be called last, obviously
+ */
+void game_destroy(game_t game) {
   game_sync_free(game->sync, game->state->n_players);
+  game_disconnect(game);
+}
+
+void game_end(game_t game) {
+  // Release all locks to allow processes to exit
+  sem_post(&game->sync->view_should_update);
+  for (int i = 0; i < game->state->n_players; i++)
+    sem_post(&game->sync->player_may_move[i]);
+
+  game->state->game_ended = 1;
+}
+
+// === State access ===========================================================
+
+game_state_t *game_state(game_t game) { return game->state; }
+
+game_state_t game_clone_state(game_t game) { return *game->state; }
+
+// === Sync functions =========================================================
+
+void game_will_read_state(game_t game) {
+  // Wait for writer
+  sem_wait(&game->sync->master_write_mutex);
+  sem_post(&game->sync->master_write_mutex);
+
+  // Lightswitch sync
+  sem_wait(&game->sync->read_count_mutex);
+  if (game->sync->read_count++ == 0) {
+    sem_wait(&game->sync->game_state_mutex);
+  }
+  sem_post(&game->sync->read_count_mutex);
+}
+
+void game_did_read_state(game_t game) {
+  sem_wait(&game->sync->read_count_mutex);
+  if (--game->sync->read_count == 0) {
+    sem_post(&game->sync->game_state_mutex);
+  }
+  sem_post(&game->sync->read_count_mutex);
+}
+
+void game_lock_state_for_writing(game_t game) {
+  sem_wait(&game->sync->master_write_mutex);
+  sem_wait(&game->sync->game_state_mutex);
+  sem_post(&game->sync->master_write_mutex);
+}
+
+void game_release_state(game_t game) {
+  sem_post(&game->sync->game_state_mutex);
+}
+
+void game_wait_move_processed(game_t game, size_t player_idx) {
+  sem_wait(&game->sync->player_may_move[player_idx]);
+}
+
+void game_post_move_processed(game_t game, size_t player_idx) {
+  sem_post(&game->sync->player_may_move[player_idx]);
+}
+
+void game_update_view(game_t game) {
+  sem_post(&game->sync->view_should_update);
+  sem_wait(&game->sync->view_did_update);
+}
+
+void game_wait_view_should_update(game_t game) {
+  sem_wait(&game->sync->view_should_update);
+}
+
+void game_post_view_did_update(game_t game) {
+  sem_post(&game->sync->view_did_update);
 }

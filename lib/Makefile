@@ -12,7 +12,7 @@ $(OUTFILE): out build $(OBJECTS)
 	$(AR) $(ARFLAGS) $(OUTFILE) $(OBJECTS) $(STATICLIBS)
 
 build/%.o: src/%.c
-	$(GCC) $(GCCFLAGS) -I./include -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./include -I./include_private -c $< -o $@
 
 out:
 	mkdir out

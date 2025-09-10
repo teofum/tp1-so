@@ -2,15 +2,18 @@
 #define GAME_STATE_H
 
 #include <stdint.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <args.h>
 
 #define MAX_PLAYERS 9
 #define MAX_PLAYER_NAME 16
 
+/*
+ * Describes a single player.
+ */
 typedef struct {
   char name[MAX_PLAYER_NAME];
   uint32_t score;
@@ -21,6 +24,9 @@ typedef struct {
   int32_t blocked;
 } player_t;
 
+/*
+ * Game state.
+ */
 typedef struct {
   uint16_t board_width;
   uint16_t board_height;
@@ -30,9 +36,4 @@ typedef struct {
   int32_t board[];
 } game_state_t;
 
-size_t get_game_state_size(uint16_t board_width, uint16_t board_height);
-
-void game_state_init(game_state_t *state, const args_t *args);
-
 #endif
-

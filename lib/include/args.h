@@ -6,9 +6,9 @@
 #define MAX_PLAYERS 9
 
 /*
- * Command line args for all components
- * view/players only need a subset of the master args, so we can
- * reuse this struct and parse function for all of them
+ * Command line args for master. Used to initialize game ADT, but we also
+ * expose these to the master as it will use the executable names to spawn
+ * processes.
  */
 typedef struct {
   uint32_t width, height;
@@ -22,8 +22,15 @@ typedef struct {
   const char *players[MAX_PLAYERS];
 } args_t;
 
+/*
+ * Parse CLI args from commandline. Takes an optional error parameter, if not
+ * NULL the pointer will be set to an error string if parsing fails.
+ */
 int parse_args(int argc, char *const *argv, args_t *args, const char **err);
 
+/*
+ * Helper function to free heap allocated strings in the args struct.
+ */
 void free_args(args_t *args);
 
 #endif

@@ -1,19 +1,9 @@
-#include "game.h"
-#include <args.h>
-#include <game_state.h>
-#include <game_sync.h>
-#include <shm_utils.h>
+#include <game.h>
 #include <spawn.h>
 
 #include <stdio.h>
-#include <sys/fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include <sys/time.h> // TODO ; esto noc si va aca
 #include <sys/wait.h>
-#include <unistd.h>
-
-#include <semaphore.h> // TODO ; esto noc si va aca
-#include <sys/time.h>  // TODO ; esto noc si va aca
 
 void logpid() { printf("[master: %d] ", getpid()); }
 
@@ -87,47 +77,37 @@ int player_can_move(game_state_t *game_state, int player_idx) {
 int main(int argc, char **argv) {
   const char *err;
 
+  // Parse args
   args_t args;
   if (!parse_args(argc, argv, &args, &err)) {
     fprintf(stderr, "Parse error: %s", err);
     return -1;
   }
 
-  game_t game;
-  if (!game_init(&game, &args)) {
+  // Initialize game
+  game_t game = game_init(&args);
+  if (!game) {
     fprintf(stderr, "%s", err);
     return -1;
   }
 
+  // Get a pointer to the game state for convenience
+  game_state_t *state = game_state(game);
+
   /*
-   * Fork and exec the view process
+   * Fork and exec processes
    */
-  logpid();
   int view_pid = -1;
   if (args.view) {
-    view_pid = fork();
-    if (view_pid == -1) {
-      logpid();
-      printf("Failed to fork view process\n");
-      return -1;
-    } else if (!view_pid) {
-      char child_argv[20][3];
-      sprintf(child_argv[0], "%u", game_state->board_width);
-      sprintf(child_argv[1], "%u", game_state->board_height);
-
-      execl(args.view, args.view, child_argv[0], child_argv[1]);
-    }
+    view_pid = spawn_view(args.view, state);
   } else {
     logpid();
     printf("No view process given, running headless...\n");
   }
 
-  /*
-   * Fork and exec player processes
-   */
-  player_data_t players[MAX_PLAYERS];
-  for (int i = 0; i < game_state->n_players; i++) {
-    players[i] = spawn_player(args.players[i], game_state);
+  int player_pipes[MAX_PLAYERS];
+  for (int i = 0; i < state->n_players; i++) {
+    player_pipes[i] = spawn_player(args.players[i], state, i);
   }
 
   /*
@@ -143,76 +123,64 @@ int main(int argc, char **argv) {
   long elapsed_s;
   gettimeofday(&start, NULL);
 
-  while (!game_state->game_ended) {
+  while (!state->game_ended) {
     FD_ZERO(&current_pipe); // vacia el fd_set
-    FD_SET(players[current_player].pipe_rx, &current_pipe);
+    FD_SET(player_pipes[current_player], &current_pipe);
 
-    // Allow player to move
-    sem_post(&game_sync->player_may_move[current_player]);
-
-    int res = select(players[current_player].pipe_rx + 1, &current_pipe, NULL,
+    int res = select(player_pipes[current_player] + 1, &current_pipe, NULL,
                      NULL, &timeout_zero);
     if (res < 0) { // Error
       logpid();
       printf("Select error :( \n");
       return -1;
     } else if (res > 0) {
-      // Take write lock and game state lock
-      sem_wait(&game_sync->master_write_mutex);
-      sem_wait(&game_sync->game_state_mutex);
-      sem_post(&game_sync->master_write_mutex);
+      game_lock_state_for_writing(game);
 
       // Read move
       char move;
-      read(players[current_player].pipe_rx, &move, 1);
+      read(player_pipes[current_player], &move, 1);
 
       // Process move
-      if (make_move(current_player, move, game_state)) {
+      if (make_move(current_player, move, state)) {
         gettimeofday(&start, NULL);
       } else {
         // Invalid move
         gettimeofday(&end, NULL);
         elapsed_s = end.tv_sec - start.tv_sec;
-        if (elapsed_s > args.timeout) { // timed out
-          game_state->game_ended = 1;
+        if (elapsed_s > args.timeout) {
+          game_end(game);
         }
       }
 
       // Block player if it can't make valid moves
-      if (!player_can_move(game_state, current_player)) {
-        game_state->players[current_player].blocked = 1;
+      if (!player_can_move(state, current_player)) {
+        state->players[current_player].blocked = 1;
       }
 
-      // Release game state lock
-      sem_post(&game_sync->game_state_mutex);
+      game_post_move_processed(game, current_player);
+
+      game_release_state(game);
 
       // Signal view to update, wait for view and delay
-      if (view_pid != -1) {
-        sem_post(&game_sync->view_should_update);
-        sem_wait(&game_sync->view_did_update);
-      }
+      if (view_pid != -1)
+        game_update_view(game);
 
       usleep(args.delay * 10000);
     }
 
-    current_player = (current_player + 1) % game_state->n_players;
+    current_player = (current_player + 1) % state->n_players;
 
     // If all players are blocked, end game
     int all_blocked = 1;
-    for (int i = 0; i < game_state->n_players; i++) {
-      if (!game_state->players[i].blocked) {
+    for (int i = 0; i < state->n_players; i++) {
+      if (!state->players[i].blocked) {
         all_blocked = 0;
         break;
       }
     }
-    if (all_blocked)
-      game_state->game_ended = 1;
-  }
 
-  // Habilita todo para que finalize
-  sem_post(&game_sync->view_should_update);
-  for (int i = 0; i < game_state->n_players; i++) {
-    sem_post(&game_sync->player_may_move[i]);
+    if (all_blocked)
+      game_end(game);
   }
 
   /*
@@ -227,21 +195,15 @@ int main(int argc, char **argv) {
 
   logpid();
   printf("Waiting for child processes to end...\n");
-  for (int i = 0; i < game_state->n_players; i++) {
-    int pid = players[i].pid;
+  for (int i = 0; i < state->n_players; i++) {
+    int pid = state->players[i].pid;
     int ret;
     waitpid(pid, &ret, 0);
     logpid();
-    printf("Player %d process with pid %d exited with code %d\n", i + 1, pid,
-           ret);
+    printf("Player %d with pid %d exited with code %d\n", i + 1, pid, ret);
   }
 
-  game_sync_free(game_sync, game_state->n_players);
-
-  logpid();
-  printf("Unlinking shared memory...\n");
-  shm_unlink("/game_state");
-  shm_unlink("/game_sync");
+  game_destroy(game);
 
   // TODO: free the args once we get the shtuff into shmem
   free_args(&args);

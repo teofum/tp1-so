@@ -1,3 +1,9 @@
+/*
+ * Game synchronization primitives.
+ * Private implementation detail not exposed to the caller. All synchronization
+ * is handled through the game ADT.
+ */
+
 #ifndef GAME_SYNC_H
 #define GAME_SYNC_H
 
@@ -16,8 +22,14 @@ typedef struct {
   sem_t player_may_move[9];
 } game_sync_t;
 
+/*
+ * Initialize semaphores
+ */
 void game_sync_init(game_sync_t *game_sync, uint32_t n_players);
 
+/*
+ * Destroy semaphores
+ */
 void game_sync_free(game_sync_t *game_sync, uint32_t n_players);
 
 #endif

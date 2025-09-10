@@ -2,24 +2,29 @@
 #include <stdio.h>
 #include <unistd.h>
 
-player_data_t spawn_player(const char *path_to_executable,
-                           game_state_t *game_state) {
-  player_data_t player_data;
+static int exec_with_board_size(const char *path, game_state_t *game_state) {
+  static char child_argv[20][2];
+  sprintf(child_argv[0], "%u", game_state->board_width);
+  sprintf(child_argv[1], "%u", game_state->board_height);
+
+  return execl(path, path, child_argv[0], child_argv[1]);
+}
+
+int spawn_player(const char *path_to_executable, game_state_t *game_state,
+                 size_t i) {
   int pipe_rx[2];
 
-  // Create pipes to communicate with player
+  // Create pipe to communicate with player
   if (pipe(pipe_rx) == -1) {
-    // Failed to create pipes
-    player_data.pid = -1;
-    return player_data;
+    return -1; // Failed to create pipe
   }
 
-  player_data.pid = fork();
-  if (!player_data.pid) {
+  pid_t pid = fork();
+  if (!pid) {
     // Map stdout to player -> master pipe
     dup2(pipe_rx[1], 1);
 
-    // Close unused fd (player)
+    // Close unused read end fd (player)
     close(pipe_rx[0]);
 
     // Close unused fds from previously spawned players
@@ -28,17 +33,24 @@ player_data_t spawn_player(const char *path_to_executable,
       close(i);
     }
 
-    char child_argv[20][2];
-    sprintf(child_argv[0], "%u", game_state->board_width);
-    sprintf(child_argv[1], "%u", game_state->board_height);
-
-    int res = execl(path_to_executable, path_to_executable, child_argv[0],
-                    child_argv[1]);
+    int res = exec_with_board_size(path_to_executable, game_state);
+    // TODO this should exit if execl fails!!!
   }
 
-  // Close unused fds (master)
+  // Close unused write end fd (master)
   close(pipe_rx[1]);
 
-  player_data.pipe_rx = pipe_rx[0];
-  return player_data;
+  // Return read end
+  game_state->players[i].pid = pid;
+  return pipe_rx[0];
+}
+
+pid_t spawn_view(const char *path_to_executable, game_state_t *game_state) {
+  pid_t pid = fork();
+  if (!pid) {
+    int res = exec_with_board_size(path_to_executable, game_state);
+    // TODO this should exit if execl fails!!!
+  }
+
+  return pid;
 }
