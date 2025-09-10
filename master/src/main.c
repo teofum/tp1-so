@@ -23,10 +23,10 @@ int main(int argc, char **argv) {
   }
 
   // Initialize game
-  game_t game = game_init(&args);
+  game_t game = game_init(&args, &err);
   if (!game) {
     free_args(&args);
-    fprintf(stderr, "Game initialization failed: unknown\n");
+    fprintf(stderr, "Game initialization failed: %s\n", err);
     return -1;
   }
 
@@ -38,11 +38,13 @@ int main(int argc, char **argv) {
    */
   view_t view = view_create(game, &args);
   if (!view) {
+    fprintf(stderr, "View initialization failed\n");
     return -1;
   }
 
   players_t players = players_create(game, &args);
   if (!players) {
+    fprintf(stderr, "Player initialization failed\n");
     return -1;
   }
 

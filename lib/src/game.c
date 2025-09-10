@@ -16,12 +16,15 @@ struct game_cdt_t {
 };
 
 /*
- * Initialize game, used by master
+ * Initialize game, used by master.
  */
-game_t game_init(args_t *args) {
+game_t game_init(args_t *args, const char **err) {
   game_t game = malloc(sizeof(struct game_cdt_t));
-  if (!game)
+  if (!game) {
+    if (err)
+      *err = "Allocation failed";
     return NULL;
+  }
 
   // Calculate game state struct size
   game->state_size = get_game_state_size(args->width, args->height);
@@ -29,13 +32,19 @@ game_t game_init(args_t *args) {
   // Create and map shared memory
   game->state = shm_open_and_map("/game_state", SHM_READ_WRITE | SHM_CREATE,
                                  game->state_size);
-  if (!game->state)
+  if (!game->state) {
+    if (err)
+      *err = "Failed to map shared memory /game_state";
     return NULL;
+  }
 
   game->sync = shm_open_and_map("/game_sync", SHM_READ_WRITE | SHM_CREATE,
                                 sizeof(game_sync_t));
-  if (!game->sync)
+  if (!game->sync) {
+    if (err)
+      *err = "Failed to map shared memory /game_sync";
     return NULL;
+  }
 
   // Initialize game
   game_state_init(game->state, args);

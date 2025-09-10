@@ -12,9 +12,10 @@ typedef struct game_cdt_t *game_t;
 
 /*
  * Initialize game. Creates share memory and sync resources and initializes
- * board and player state.
+ * board and player state. Takes an optional error parameter, if not NULL the
+ * pointer will be set to an error string if initialization fails.
  */
-game_t game_init(args_t *args);
+game_t game_init(args_t *args, const char **err);
 
 /*
  * Connect to an existing game, used by view and players.
