@@ -37,7 +37,14 @@ int main(int argc, char **argv) {
    * Spawn view and players
    */
   view_t view = view_create(game, &args);
+  if (!view) {
+    return -1;
+  }
+
   players_t players = players_create(game, &args);
+  if (!players) {
+    return -1;
+  }
 
   /*
    * Timeout
@@ -54,7 +61,7 @@ int main(int argc, char **argv) {
     int player_will_move = players_next(players, &current_player, &move);
 
     if (player_will_move < 0) {
-      perror("Select failed: ");
+      perror("Select failed");
       return -1;
     } else if (player_will_move) {
       if (process_move(game, current_player, move)) {

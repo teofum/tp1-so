@@ -1,6 +1,7 @@
 #include <spawn.h>
 #include <view.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 
@@ -18,6 +19,15 @@ view_t view_create(game_t game, args_t *args) {
 
   if (args->view) {
     view->pid = spawn_view(args->view, game_state(game));
+
+    // Check that the view process actually started correctly, fail if it didn't
+    usleep(10000); // Wait a bit so the view process has time to actually start
+    int ret;
+    if (waitpid(view->pid, &ret, WNOHANG)) {
+      printf("View exited with code %d\n", ret);
+      free(view);
+      return NULL;
+    }
   } else {
     view->pid = -1;
   }

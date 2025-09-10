@@ -32,7 +32,12 @@ int spawn_player(const char *path_to_executable, game_state_t *game_state,
 
     int res = exec_with_board_size(path_to_executable, game_state);
     if (res < 0) {
-      perror("Player exec failed: ");
+      perror("Player exec failed");
+
+      // Set the player as blocked from the start if the executable failed tt
+      // start, reference impl does this
+      game_state->players[i].blocked = 1;
+
       exit(-1);
     }
   }
@@ -40,7 +45,7 @@ int spawn_player(const char *path_to_executable, game_state_t *game_state,
   // Close unused write end fd (master)
   // For some reason, this causes all players to write to the same pipe
   // wtf?? FIXME
-  // close(pipe_rx[1]);
+  // close(player_pipe[1]);
 
   // Return read end
   game_state->players[i].pid = pid;
@@ -52,7 +57,7 @@ pid_t spawn_view(const char *path_to_executable, game_state_t *game_state) {
   if (!pid) {
     int res = exec_with_board_size(path_to_executable, game_state);
     if (res < 0) {
-      perror("View exec failed: ");
+      perror("View exec failed");
       exit(-1);
     }
   }
