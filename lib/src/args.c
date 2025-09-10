@@ -59,7 +59,7 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
           *err = "Timeout must be a positive integer";
         return 0;
       }
-      args->delay = t;
+      args->timeout = t;
       break;
     }
     case 's': {
@@ -75,7 +75,7 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
       for (char *word = strtok(optarg, " "); word; word = strtok(NULL, " ")) {
         args->players[i] = strdup(word);
 
-        if (++i > MAX_PLAYERS) {
+        if (++i >= MAX_PLAYERS) {
           if (err)
             *err = "Too many players";
           return 0;
