@@ -3,7 +3,7 @@
 
 #include <game.h>
 
-typedef enum : char {
+typedef enum {
   MOVE_UP = 0,
   MOVE_UP_RIGHT,
   MOVE_RIGHT,
