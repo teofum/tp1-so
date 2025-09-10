@@ -1,4 +1,5 @@
 #include <game.h>
+#include <move.h>
 #include <spawn.h>
 
 #include <stdio.h>
@@ -6,70 +7,6 @@
 #include <sys/wait.h>
 
 void logpid() { printf("[master: %d] ", getpid()); }
-
-/*
- * Aplica el move, retorna 0 si fue invalido y 1 si se aplico
- */
-int make_move(int player, char dir, game_state_t *game_state) {
-  if (dir < 0 || dir > 7) {
-    game_state->players[player].requests_invalid++;
-    return 0;
-  }
-
-  int x = game_state->players[player].x;
-  int y = game_state->players[player].y;
-
-  int mx = 0, my = 0;
-
-  if (dir == 7 || dir == 0 || dir == 1) {
-    --my;
-  } else if (dir == 3 || dir == 4 || dir == 5) {
-    ++my;
-  }
-  if (dir == 1 || dir == 2 || dir == 3) {
-    ++mx;
-  } else if (dir == 5 || dir == 6 || dir == 7) {
-    --mx;
-  }
-
-  int curpos = game_state->board_width * y + x;
-  int newpos = curpos + (game_state->board_width * my + mx);
-
-  if (!(0 <= (x + mx) && (x + mx) < game_state->board_width) ||
-      !(0 <= (y + my) && (y + my) < game_state->board_height) ||
-      game_state->board[newpos] <= 0) {
-    game_state->players[player].requests_invalid++;
-    return 0;
-  }
-
-  game_state->players[player].requests_valid++;
-
-  game_state->players[player].score += game_state->board[newpos];
-  game_state->board[newpos] = -player;
-
-  game_state->players[player].x = x + mx;
-  game_state->players[player].y = y + my;
-
-  return 1;
-}
-
-int player_can_move(game_state_t *game_state, int player_idx) {
-  int can_move = 0;
-
-  player_t *player = &game_state->players[player_idx];
-  for (int i = player->y - 1; i <= player->y + 1 && !can_move; i++) {
-    for (int j = player->x - 1; j <= player->x + 1 && !can_move; j++) {
-      if (i < 0 || j < 0 || i >= game_state->board_height ||
-          j >= game_state->board_width)
-        continue;
-
-      if (game_state->board[i * game_state->board_width + j] > 0)
-        can_move = 1;
-    }
-  }
-
-  return can_move;
-}
 
 /*
  * Main function
@@ -134,36 +71,13 @@ int main(int argc, char **argv) {
       printf("Select error :( \n");
       return -1;
     } else if (res > 0) {
-      game_lock_state_for_writing(game);
-
       // Read move
-      char move;
+      move_t move;
       read(player_pipes[current_player], &move, 1);
 
-      if (state->players[current_player].blocked) {
-        printf("blocked player %d moved!!! %d\n", current_player, (int)move);
-      }
-
-      // Process move
-      if (make_move(current_player, move, state)) {
+      if (process_move(game, current_player, move)) {
         gettimeofday(&start, NULL);
-      } else {
-        // Invalid move
-        gettimeofday(&end, NULL);
-        elapsed_s = end.tv_sec - start.tv_sec;
-        if (elapsed_s > args.timeout) {
-          game_end(game);
-        }
       }
-
-      // Block player if it can't make valid moves
-      if (!player_can_move(state, current_player)) {
-        state->players[current_player].blocked = 1;
-      }
-
-      game_post_move_processed(game, current_player);
-
-      game_release_state(game);
 
       // Signal view to update, wait for view and delay
       if (view_pid != -1)
@@ -173,6 +87,13 @@ int main(int argc, char **argv) {
     }
 
     current_player = (current_player + 1) % state->n_players;
+
+    // Check timeout
+    gettimeofday(&end, NULL);
+    elapsed_s = end.tv_sec - start.tv_sec;
+    if (elapsed_s > args.timeout) {
+      game_end(game);
+    }
 
     // If all players are blocked, end game
     int all_blocked = 1;
