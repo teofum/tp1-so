@@ -25,7 +25,8 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
     case 'w': {
       int w = atoi(optarg);
       if (w < 10) {
-        *err = "Board width must be at least 10";
+        if (err)
+          *err = "Board width must be at least 10";
         return 0;
       }
       args->width = w;
@@ -34,7 +35,8 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
     case 'h': {
       int h = atoi(optarg);
       if (h < 10) {
-        *err = "Board height must be at least 10";
+        if (err)
+          *err = "Board height must be at least 10";
         return 0;
       }
       args->height = h;
@@ -43,7 +45,8 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
     case 'd': {
       int d = atoi(optarg);
       if (d < 0) {
-        *err = "Delay must be a non negative integer";
+        if (err)
+          *err = "Delay must be a non negative integer";
         return 0;
       }
       args->delay = d;
@@ -52,10 +55,11 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
     case 't': {
       int t = atoi(optarg);
       if (t <= 0) {
-        *err = "Timeout must be a positive integer";
+        if (err)
+          *err = "Timeout must be a positive integer";
         return 0;
       }
-      args->delay = t;
+      args->timeout = t;
       break;
     }
     case 's': {
@@ -71,8 +75,9 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
       for (char *word = strtok(optarg, " "); word; word = strtok(NULL, " ")) {
         args->players[i] = strdup(word);
 
-        if (++i > MAX_PLAYERS) {
-          *err = "Too many players";
+        if (++i >= MAX_PLAYERS) {
+          if (err)
+            *err = "Too many players";
           return 0;
         }
       }
@@ -82,7 +87,8 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
   }
 
   if (args->players[0] == NULL) {
-    *err = "No players";
+    if (err)
+      *err = "No players";
     return 0;
   }
 

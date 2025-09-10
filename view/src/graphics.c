@@ -1,6 +1,7 @@
 #include <graphics.h>
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <curses.h>
@@ -55,7 +56,7 @@ static void cat(int y1, int x1, int y2, int x2) {
 static void get_cell_contents(char *buf, int value, int i, int j,
                               game_state_t *game_state) {
   int player_idx = -value;
-  int player_is_here = i == game_state->players[player_idx].y &&
+  int player_is_here = value <= 0 && i == game_state->players[player_idx].y &&
                        j == game_state->players[player_idx].x;
 
   if (value > 0) {
