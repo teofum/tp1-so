@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    char next_move = get_next_move(game_state,player_idx);
+    char next_move = get_next_move(state,player_idx);
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
