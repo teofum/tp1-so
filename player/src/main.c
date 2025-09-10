@@ -99,10 +99,6 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    wait(&game_sync->game_state_mutex);
-    post(&game_sync->game_state_mutex);
-    // Wait for master to update the board before computing next
-
     char next_move = get_next_move(game_state,player_idx);
 
     // Send next move to master
