@@ -1,6 +1,8 @@
 #include <game.h>
 #include <move.h>
+#include <players.h>
 #include <spawn.h>
+#include <sys/wait.h>
 #include <timeout.h>
 
 #include <stdio.h>
@@ -43,10 +45,7 @@ int main(int argc, char **argv) {
     printf("No view process given, running headless...\n");
   }
 
-  int player_pipes[MAX_PLAYERS];
-  for (int i = 0; i < state->n_players; i++) {
-    player_pipes[i] = spawn_player(args.players[i], state, i);
-  }
+  players_t players = players_create(state, &args);
 
   /*
    * Timeout
@@ -57,26 +56,15 @@ int main(int argc, char **argv) {
   /*
    * Process player move requests
    */
-  // Select setup
-  fd_set current_pipe;
-  struct timeval timeout_zero = {0}; // para que revise instantaneamente
-  int current_player = 0;
-
+  uint32_t current_player;
+  move_t move;
   while (!state->game_ended) {
-    FD_ZERO(&current_pipe); // vacia el fd_set
-    FD_SET(player_pipes[current_player], &current_pipe);
+    int player_will_move = players_next(players, &current_player, &move);
 
-    int res = select(player_pipes[current_player] + 1, &current_pipe, NULL,
-                     NULL, &timeout_zero);
-    if (res < 0) { // Error
-      logpid();
-      printf("Select error :( \n");
+    if (player_will_move < 0) {
+      perror("Select failed: ");
       return -1;
-    } else if (res > 0) {
-      // Read move
-      char move;
-      read(player_pipes[current_player], &move, 1);
-
+    } else if (player_will_move) {
       if (process_move(game, current_player, move)) {
         timeout_reset(timeout);
       }
@@ -105,22 +93,16 @@ int main(int argc, char **argv) {
   /*
    * Wait for child processes and clean up resources
    */
+  int ret;
   if (view_pid != -1) {
-    int ret;
     waitpid(view_pid, &ret, 0);
     logpid();
     printf("View process exited with code %d\n", ret);
   }
 
-  logpid();
-  printf("Waiting for child processes to end...\n");
-  for (int i = 0; i < state->n_players; i++) {
-    int pid = state->players[i].pid;
-    int ret;
-    waitpid(pid, &ret, 0);
-    logpid();
-    printf("Player %d with pid %d exited with code %d\n", i + 1, pid, ret);
-  }
+  players_wait_all(players, NULL);
+  // logpid();
+  // printf("Player %d with pid %d exited with code %d\n", i + 1, pid, ret);
 
   game_destroy(game);
 
