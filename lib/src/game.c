@@ -1,7 +1,8 @@
 #include <game.h>
 #include <game_state_impl.h>
 #include <game_sync.h>
-#include <shm_utils.h>
+
+#include <shm.h>
 #include <stdlib.h>
 
 /*
@@ -26,13 +27,13 @@ game_t game_init(args_t *args) {
   game->state_size = get_game_state_size(args->width, args->height);
 
   // Create and map shared memory
-  game->state =
-      shm_open_and_map("/game_state", O_RDWR | O_CREAT, game->state_size);
+  game->state = shm_open_and_map("/game_state", SHM_READ_WRITE | SHM_CREATE,
+                                 game->state_size);
   if (!game->state)
     return NULL;
 
-  game->sync =
-      shm_open_and_map("/game_sync", O_RDWR | O_CREAT, sizeof(game_sync_t));
+  game->sync = shm_open_and_map("/game_sync", SHM_READ_WRITE | SHM_CREATE,
+                                sizeof(game_sync_t));
   if (!game->sync)
     return NULL;
 
@@ -52,11 +53,12 @@ game_t game_connect(uint32_t width, uint32_t height) {
     return NULL;
 
   game->state_size = get_game_state_size(width, height);
-  game->state = shm_open_and_map("/game_state", O_RDONLY, game->state_size);
+  game->state = shm_open_and_map("/game_state", SHM_READ, game->state_size);
   if (!game->state)
     return NULL;
 
-  game->sync = shm_open_and_map("/game_sync", O_RDWR, sizeof(game_sync_t));
+  game->sync =
+      shm_open_and_map("/game_sync", SHM_READ_WRITE, sizeof(game_sync_t));
   if (!game->sync)
     return NULL;
 
@@ -67,8 +69,8 @@ game_t game_connect(uint32_t width, uint32_t height) {
  * Disconnect from a game, used by view/players
  */
 void game_disconnect(game_t game) {
-  shm_unlink("/game_state");
-  shm_unlink("/game_sync");
+  shm_disconnect("/game_state");
+  shm_disconnect("/game_sync");
 
   game->state = NULL;
   game->sync = NULL;
