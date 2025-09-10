@@ -2,6 +2,7 @@
 #include <view.h>
 
 #include <stdlib.h>
+#include <sys/wait.h>
 
 struct view_cdt_t {
   int pid;

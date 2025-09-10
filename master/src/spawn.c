@@ -3,11 +3,11 @@
 #include <unistd.h>
 
 static int exec_with_board_size(const char *path, game_state_t *game_state) {
-  static char child_argv[20][2];
+  static char child_argv[2][10];
   sprintf(child_argv[0], "%u", game_state->board_width);
   sprintf(child_argv[1], "%u", game_state->board_height);
 
-  return execl(path, path, child_argv[0], child_argv[1]);
+  return execl(path, path, child_argv[0], child_argv[1], NULL);
 }
 
 int spawn_player(const char *path_to_executable, game_state_t *game_state,
@@ -31,7 +31,10 @@ int spawn_player(const char *path_to_executable, game_state_t *game_state,
     }
 
     int res = exec_with_board_size(path_to_executable, game_state);
-    // TODO this should exit if execl fails!!!
+    if (res < 0) {
+      perror("Player exec failed: ");
+      exit(-1);
+    }
   }
 
   // Close unused write end fd (master)
@@ -48,7 +51,10 @@ pid_t spawn_view(const char *path_to_executable, game_state_t *game_state) {
   pid_t pid = fork();
   if (!pid) {
     int res = exec_with_board_size(path_to_executable, game_state);
-    // TODO this should exit if execl fails!!!
+    if (res < 0) {
+      perror("View exec failed: ");
+      exit(-1);
+    }
   }
 
   return pid;
