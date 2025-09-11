@@ -14,6 +14,11 @@ player: out docker out/chompchamps.a
 	rm -f out/player
 	ln player/out/player out/player
 
+playerMk2: out docker out/chompchamps.a
+	docker exec -it so-builder make all -C /root/playerMk2
+	rm -f out/playerMk2
+	ln playerMk2/out/playerMk2 out/playerMk2
+
 view: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/view
 	rm -f out/view
