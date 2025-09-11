@@ -22,46 +22,32 @@ char getDir(int dx, int dy){
 
 // returns 0 if out of bounds
 int inBounds(int x,int y, game_state_t* gs){
-  if( x < 0 || y < 0 ||
-      x >= gs->board_width ||
-      y >= gs->board_height ||
-      ( gs->board[ x + (y * gs->board_width) ] <= 0 )
-    ){
-    return 0;
+  if( x < 0 || y < 0 || x >= gs->board_width || y >= gs->board_height){
+  return 0;
   }
   return 1;
 }
 
-int checkBox( int x, int y, game_state_t* game_state){
-  int sum = 0;
+// en el gs tengo el player y el board
+// LA POSICION DEL PLAYER NO SE UPDATEA PARA CUANDO ESTE ARRANCA A CORRER
+char get_next_move(game_state_t* game_state, int player_idx) {
+  char next=-1;
+  int maxp=-1;
+
+  int x = game_state->players[player_idx].x;
+  int y = game_state->players[player_idx].y;
+
   for(int dy=-1; dy<=1; ++dy){
     for(int dx=-1; dx<=1; ++dx){
       if( inBounds( x + dx, y + dy, game_state ) ){
         int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
-        sum += game_state->board[kernelIndex];
-      }
-    }
-  }
-  return sum;
-}
+        if(game_state->board[kernelIndex]>maxp){
 
-// todo: H LA POSICION DEL PLAYER NO SE UPDATEA PARA CUANDO ESTE ARRANCA A CORRER
-char get_next_move(game_state_t* game_state, int player_idx) {
-  char next=-1;
-  int max=-1;
-
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y; 
-
-  for(int dy=-1; dy<=1; ++dy){
-    for(int dx=-1; dx<=1; ++dx){
-      if( !(dx==0 && dy==0) && inBounds( x + dx, y + dy, game_state) ){
-        int cuadVal = checkBox(x + dx ,y + dy ,game_state);
-        if( cuadVal > max ){
           next=getDir(dx,dy);
-          max=cuadVal;
+          maxp=game_state->board[kernelIndex];
+
         }
-      }
+      }    
     }
   }
 
