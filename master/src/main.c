@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
    * Process player move requests until game ends
    */
   while (!state->game_ended) {
-    player_move_t next_move = players_next(players);
+    player_move_t next_move = players_next(players, timeout);
     if (next_move.error) {
       perror("Players next failed");
       return -1;

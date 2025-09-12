@@ -56,6 +56,8 @@ int main(int argc, char **argv) {
   }
 
   // todo gameover screen
+  draw_game_over();
+  refresh();
   getch();
 
   // Cleanup ncurses

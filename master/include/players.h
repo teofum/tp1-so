@@ -3,6 +3,7 @@
 
 #include <game.h>
 #include <move.h>
+#include <timeout.h>
 
 /*
  * Players ADT
@@ -36,7 +37,7 @@ players_t players_create(game_t game, args_t *args);
  * Returns a struct containing information about the next move. If an error
  * happens, the struct "error" field is set to 1 and errno is set.
  */
-player_move_t players_next(players_t players);
+player_move_t players_next(players_t players, timeout_t timeout);
 
 /*
  * Returns 1 if all players are blocked, otherwise returns 0.

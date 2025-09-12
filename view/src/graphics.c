@@ -194,3 +194,9 @@ void draw_player_card(int player_idx, game_state_t *game_state) {
     mvaddstr(y1 + 2, x0 + 1, buf);
   }
 }
+
+void draw_game_over() {
+  rect(0, 0, 10, 30);
+  move(2, 2);
+  printw("game over");
+}
