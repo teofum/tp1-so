@@ -9,6 +9,13 @@
 #include <stdio.h>
 #include <sys/wait.h>
 
+game_t game = NULL;
+
+void cleanup() {
+  if (game)
+    game_destroy(game);
+}
+
 /*
  * Main function
  */
@@ -24,12 +31,13 @@ int main(int argc, char **argv) {
   }
 
   // Initialize game
-  game_t game = game_init(&args, &err);
+  game = game_init(&args, &err);
   if (!game) {
     free_args(&args);
     fprintf(stderr, "Game initialization failed: %s\n", err);
     return -1;
   }
+  atexit(cleanup);
 
   // Get a pointer to the game state for convenience
   game_state_t *state = game_state(game);
@@ -82,7 +90,6 @@ int main(int argc, char **argv) {
    */
   view_wait(view, view_wait_callback);
   players_wait_all(players, player_wait_callback);
-  game_destroy(game);
 
   return 0;
 }

@@ -7,7 +7,12 @@
 
 #include <curses.h>
 
-void logpid() { printf("[view: %d] ", getpid()); }
+game_t game = NULL;
+
+void cleanup() {
+  if (game)
+    game_disconnect(game);
+}
 
 int main(int argc, char **argv) {
   /*
@@ -19,12 +24,12 @@ int main(int argc, char **argv) {
   int width = atoi(argv[1]);
   int height = atoi(argv[2]);
 
-  game_t game = game_connect(width, height);
+  game = game_connect(width, height);
   if (!game) {
-    logpid();
-    printf("Failed to connect to game\n");
+    printf("View: failed to connect to game\n");
     return -1;
   }
+  atexit(cleanup);
 
   game_state_t *state = game_state(game);
 
@@ -61,8 +66,6 @@ int main(int argc, char **argv) {
 
   // Cleanup ncurses
   endwin();
-
-  game_disconnect(game);
 
   return 0;
 }

@@ -4,12 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void logpid() { printf("[player: %d] ", getpid()); }
 void logerr(const char *s) {
   fprintf(stderr, "[player: %d] %s\n", getpid(), s);
 }
 
-// TODO move this to files etc
+game_t game = NULL;
+
+void cleanup() {
+  if (game)
+    game_disconnect(game);
+}
 
 char get_next_move() { return rand() % 8; }
 
@@ -23,11 +27,12 @@ int main(int argc, char **argv) {
   int width = atoi(argv[1]);
   int height = atoi(argv[2]);
 
-  game_t game = game_connect(width, height);
+  game = game_connect(width, height);
   if (!game) {
     logerr("Failed to connect to game\n");
     return -1;
   }
+  atexit(cleanup);
 
   // Pointer to game state for convenience
   // This is the actual shared state, be careful when reading it!
@@ -65,8 +70,6 @@ int main(int argc, char **argv) {
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
   }
-
-  game_disconnect(game);
 
   return 0;
 }
