@@ -6,6 +6,21 @@
 
 #include <curses.h>
 
+#define C_GRAY 20
+#define CP_GRAYSCALE 1
+
+#define CP_PLAYER 10
+
+#define HEADER_HEIGHT 5
+#define HEADER_MIN_WIDTH 18
+#define HEADER_CAT_WIDTH 23
+
+#define CELL_WIDTH 5
+#define CELL_HEIGHT 3
+
+#define GAME_OVER_WIDTH 44
+#define GAME_OVER_HEIGHT 19
+
 void gfx_init() {
   // TERM env var is lost when process is spawned from the provided master,
   // causing ncurses init to fail. We set it manually to work around this.
@@ -27,6 +42,12 @@ void gfx_init() {
       init_pair(CP_PLAYER + i, i + 1, COLOR_BLACK);
     }
   }
+}
+
+static void clear_rect(int y1, int x1, int y2, int x2) {
+  for (int y = y1; y <= y2; y++)
+    for (int x = x1; x <= x2; x++)
+      mvaddch(y, x, ' ');
 }
 
 static void rect(int y1, int x1, int y2, int x2) {
@@ -193,4 +214,77 @@ void draw_player_card(int player_idx, game_state_t *game_state) {
     cat(y1 + 1, x0, y2 - 1, x0 + CELL_WIDTH - 1);
     mvaddstr(y1 + 2, x0 + 1, buf);
   }
+}
+
+static int compare_by_score(const void *a, const void *b) {
+  const player_t *player_a = a;
+  const player_t *player_b = b;
+
+  // Sort descending by score
+  int score_diff = (int)player_b->score - player_a->score;
+  if (score_diff != 0)
+    return score_diff;
+
+  // Sort ascending by valid moves
+  int valid_moves_diff =
+      (int)player_a->requests_valid - player_b->requests_valid;
+  if (valid_moves_diff != 0)
+    return valid_moves_diff;
+
+  // Sort ascending by invalid moves
+  int invalid_moves_diff =
+      (int)player_a->requests_invalid - player_b->requests_invalid;
+  return invalid_moves_diff;
+}
+
+void draw_game_over(game_state_t *game_state) {
+  uint32_t x1 = (COLS - GAME_OVER_WIDTH) >> 1;
+  uint32_t y1 = (LINES - GAME_OVER_HEIGHT) >> 1;
+  uint32_t x2 = x1 + GAME_OVER_WIDTH - 1;
+  uint32_t y2 = y1 + GAME_OVER_HEIGHT - 1;
+
+  attr_set(A_NORMAL, 0, NULL);
+
+  // Draw window border and clear interior
+  clear_rect(y1, x1, y2, x2);
+  rect(y1, x1, y2, x2);
+
+  // Draw text
+  move(y1 + 2, x1 + (GAME_OVER_WIDTH - 9) / 2);
+  printw("Game Over");
+
+  // Get winner and draw it
+  player_t players[MAX_PLAYERS];
+  for (int i = 0; i < game_state->n_players; i++) {
+    players[i] = game_state->players[i];
+
+    // Abuse pid field to store the index, easier than making a new struct
+    players[i].pid = i;
+  }
+  qsort(players, game_state->n_players, sizeof(player_t), compare_by_score);
+
+  // Find player index of winner
+  // Not very efficient, but this only runs once so whatever, extra couple
+  // microseconds won't make a difference
+  int winner_idx = players[0].pid;
+
+  attr_set(A_NORMAL, CP_PLAYER + winner_idx, NULL);
+  move(y1 + 3, x1 + (GAME_OVER_WIDTH - 14) / 2);
+  printw("Player %d wins!", winner_idx + 1);
+
+  attr_set(A_NORMAL, 0, NULL);
+  move(y1 + 5, x1 + (GAME_OVER_WIDTH - 30) / 2);
+  printw("# Player   Score Valid Invalid");
+
+  for (int i = 0; i < game_state->n_players; i++) {
+    attr_set(A_NORMAL, CP_PLAYER + players[i].pid, NULL);
+    move(y1 + 6 + i, x1 + (GAME_OVER_WIDTH - 30) / 2);
+    printw("%d %-8s %5d %5d %7d", players[i].pid + 1, players[i].name,
+           players[i].score, players[i].requests_valid,
+           players[i].requests_invalid);
+  }
+
+  attr_set(A_NORMAL, 0, NULL);
+  move(y2 - 2, x1 + (GAME_OVER_WIDTH - 21) / 2);
+  printw("Press any key to exit");
 }
