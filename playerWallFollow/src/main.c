@@ -18,8 +18,10 @@ char getDir(int dx, int dy){
                     {5, 4,3}};
 
   return dirs[dy + 1][dx + 1];
-}//2 = [1][2] // dy=0 dx=1
+}
 
+// Convert a cahr dir into its corresponding
+// dx and dy
 int getX(char dir){
   int x[8]={ 0, 1, 1, 1, 0,-1,-1,-1};
   return x[dir];
@@ -41,7 +43,7 @@ int inBounds(int x,int y, game_state_t* gs){
   return 1;
 }
 
-// en el gs tengo el player y el board
+// Generate next move :T
 char get_next_move(game_state_t* game_state, int player_idx, char prev) {
   int x = game_state->players[player_idx].x;
   int y = game_state->players[player_idx].y;
@@ -59,6 +61,7 @@ char get_next_move(game_state_t* game_state, int player_idx, char prev) {
   return-1;
 }
 
+// Sigue derecho hasta toparse con una pared
 char walk(game_state_t* game_state,int player_idx,char prev,char* start){
   int x = game_state->players[player_idx].x;
   int y = game_state->players[player_idx].y;

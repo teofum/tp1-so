@@ -18,18 +18,21 @@ char getDir(int dx, int dy){
                     {5, 4,3}};
 
   return dirs[dy + 1][dx + 1];
-}//2 = [1][2] // dy=0 dx=1
+}
 
 // returns 0 if out of bounds
 int inBounds(int x,int y, game_state_t* gs){
-  if( x < 0 || y < 0 || x >= gs->board_width || y >= gs->board_height){
-  return 0;
+  if( x < 0 || y < 0 ||
+      x >= gs->board_width ||
+      y >= gs->board_height ||
+      ( gs->board[ x + (y * gs->board_width) ] <= 0 )
+    ){
+    return 0;
   }
   return 1;
 }
 
-// en el gs tengo el player y el board
-// LA POSICION DEL PLAYER NO SE UPDATEA PARA CUANDO ESTE ARRANCA A CORRER
+// Generate next move :T
 char get_next_move(game_state_t* game_state, int player_idx) {
   char next=-1;
   int maxp=-1;
@@ -41,11 +44,10 @@ char get_next_move(game_state_t* game_state, int player_idx) {
     for(int dx=-1; dx<=1; ++dx){
       if( inBounds( x + dx, y + dy, game_state ) ){
         int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
-        if(game_state->board[kernelIndex]>maxp){
-
+        int val = game_state->board[kernelIndex];
+        if( val > maxp ){
           next=getDir(dx,dy);
-          maxp=game_state->board[kernelIndex];
-
+          maxp=val;
         }
       }    
     }

@@ -18,7 +18,7 @@ char getDir(int dx, int dy){
                     {5, 4,3}};
 
   return dirs[dy + 1][dx + 1];
-}//2 = [1][2] // dy=0 dx=1
+}
 
 // returns 0 if out of bounds
 int inBounds(int x,int y, game_state_t* gs){
@@ -46,7 +46,7 @@ int checkBox( int x, int y, game_state_t* game_state){
   return sum;
 }
 
-// todo: H LA POSICION DEL PLAYER NO SE UPDATEA PARA CUANDO ESTE ARRANCA A CORRER
+// Generate next move :T
 char get_next_move(game_state_t* game_state, int player_idx) {
   char next=-1;
   int max=-1;
