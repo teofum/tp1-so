@@ -24,7 +24,7 @@ typedef struct {
  * Callback function to run some code when a player exits during
  * players_wait_all function call
  */
-typedef void (*player_wait_callback_t)(player_t *player, int ret);
+typedef void (*player_wait_callback_t)(player_t *player, uint32_t idx, int ret);
 
 /*
  * Create a players object, spawn all player processes and configure pipes.

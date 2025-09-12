@@ -122,7 +122,7 @@ void players_wait_all(players_t players, player_wait_callback_t callback) {
     close(players->pipe_fds[i]);
 
     if (callback)
-      callback(player, ret);
+      callback(player, i, ret);
   }
 
   free(players);

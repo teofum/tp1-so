@@ -12,7 +12,7 @@ typedef struct view_cdt_t *view_t;
 /*
  * Callback function to run some code when the view exits
  */
-typedef void (*view_wait_callback_t)(int ret);
+typedef void (*view_wait_callback_t)(pid_t pid, int ret);
 
 view_t view_create(game_t game, args_t *args);
 

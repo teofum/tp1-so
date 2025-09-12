@@ -1,3 +1,4 @@
+#include <callback.h>
 #include <game.h>
 #include <move.h>
 #include <players.h>
@@ -79,8 +80,8 @@ int main(int argc, char **argv) {
   /*
    * Wait for child processes and clean up resources
    */
-  view_wait(view, NULL);
-  players_wait_all(players, NULL);
+  view_wait(view, view_wait_callback);
+  players_wait_all(players, player_wait_callback);
   game_destroy(game);
 
   return 0;
