@@ -33,7 +33,7 @@ view_t view_create(game_t game, args_t *args) {
   }
 
   view->game = game;
-  view->us_delay_after_update = args->delay * 10000;
+  view->us_delay_after_update = args->delay * 1000;
   return view;
 }
 
