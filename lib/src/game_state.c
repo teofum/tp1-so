@@ -27,7 +27,7 @@ void game_state_init(game_state_t *state, const args_t *args) {
   // Calculate board size
   size_t board_size = state->board_width * state->board_height;
 
-    // Seed the random number generator with the current time
+  // Seed the random number generator with the current time
   srand(time(NULL));
   
   // Initialize board with rewards from 1 to 9
