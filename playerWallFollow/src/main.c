@@ -25,8 +25,8 @@ int getX(char dir){
   return x[dir];
 }
 int getY(char dir){
-  int x[8]={-1,-1, 0, 1, 1, 1, 0,-1};
-  return x[dir];
+  int y[8]={-1,-1, 0, 1, 1, 1, 0,-1};
+  return y[dir];
 }
 
 // returns 0 if out of bounds
@@ -50,11 +50,24 @@ char get_next_move(game_state_t* game_state, int player_idx, char prev) {
   if(inBounds( x + getX(check), y + getY(check), game_state)){
       return check;
   }else {
-    for(char next=prev ; next<((prev+8)%8); ++next){
-      if(inBounds( x + getX(next), y + getY(next), game_state)){
-        return next;
+    for(char next=0 ; next < 8 ; ++next){
+      if(inBounds( x + getX((prev+next)%8), y + getY((prev+next)%8), game_state)){
+        return (prev+next)%8;
       }
     }
+  }
+  return-1;
+}
+
+char walk(game_state_t* game_state,int player_idx,char prev,char* start){
+  int x = game_state->players[player_idx].x;
+  int y = game_state->players[player_idx].y;
+
+  if(inBounds(x+getX(prev),y+getY(prev),game_state)){
+    return prev;
+  }else{
+    *start=0;
+    return get_next_move(game_state,player_idx,prev);
   }
 }
 
@@ -85,7 +98,9 @@ int main(int argc, char **argv) {
       player_idx = i;
   }
 
+  // player flags n stuff
   char next_move = 0;
+  char start = 1;
 
   /*
    * Main loop
@@ -104,8 +119,12 @@ int main(int argc, char **argv) {
 
     if (!running)
       break;
-
-    next_move = get_next_move(state,player_idx, next_move);
+    
+    if(start){
+      next_move = walk(state,player_idx,next_move,&start);  
+    }else{
+      next_move = get_next_move(state,player_idx, next_move);
+    }
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
