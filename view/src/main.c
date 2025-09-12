@@ -47,17 +47,16 @@ int main(int argc, char **argv) {
 
     draw_grid(state);
 
-    refresh();
-
-    if (state->game_ended)
+    if (state->game_ended) {
+      draw_game_over(state);
       game_running = 0;
+    }
+
+    refresh();
 
     game_post_view_did_update(game);
   }
 
-  // todo gameover screen
-  draw_game_over();
-  refresh();
   getch();
 
   // Cleanup ncurses
