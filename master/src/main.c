@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   /*
    * Timeout
    */
-  timeout_t timeout = timeout_create(args.timeout);
+  timeout_t timeout = timeout_create(sec_to_micros(args.timeout));
   free_args(&args);
 
   /*
