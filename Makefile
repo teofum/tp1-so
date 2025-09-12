@@ -1,4 +1,4 @@
-all: master master_demo player playerMk2 playerMk3 view
+all: master master_demo player playerMk2 playerMk3 playerWallFollow view
 
 master: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/master
@@ -23,6 +23,11 @@ playerMk3: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/playerMk3
 	rm -f out/playerMk3
 	ln playerMk3/out/playerMk3 out/playerMk3
+
+playerWallFollow: out docker out/chompchamps.a
+	docker exec -it so-builder make all -C /root/playerWallFollow
+	rm -f out/playerWallFollow
+	ln playerWallFollow/out/playerWallFollow out/playerWallFollow
 
 view: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/view
