@@ -91,6 +91,10 @@ player_move_t players_next(players_t players, timeout_t timeout) {
     res = read(next_player_pipe, &move, 1);
     if (res < 0)
       return (player_move_t){.error = 1};
+
+    // EOF, mark player as blocked
+    if (res == 0)
+      players->game_state->players[next_player].blocked = 1;
   }
 
   // Advance player
