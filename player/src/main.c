@@ -2,6 +2,7 @@
 #include <game.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 void logpid() { printf("[player: %d] ", getpid()); }
 void logerr(const char *s) {
@@ -38,6 +39,8 @@ int main(int argc, char **argv) {
     if (state->players[i].pid == pid)
       player_idx = i;
   }
+
+  srand(player_idx);
 
   /*
    * Main loop

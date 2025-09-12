@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     int player_will_move = players_next(players, &current_player, &move);
 
     if (player_will_move < 0) {
-      perror("Select failed");
+      perror("Players next failed");
       return -1;
     } else if (player_will_move) {
       if (process_move(game, current_player, move)) {
