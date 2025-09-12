@@ -38,11 +38,12 @@ int checkBox( int x, int y, game_state_t* game_state){
     for(int dx=-1; dx<=1; ++dx){
       if( inBounds( x + dx, y + dy, game_state ) ){
         int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
-        sum += game_state->board[kernelIndex];
+        int aux = game_state->board[kernelIndex];
+        sum += (aux * aux);
       }
     }
   }
-  return (sum * sum);
+  return sum;
 }
 
 // todo: H LA POSICION DEL PLAYER NO SE UPDATEA PARA CUANDO ESTE ARRANCA A CORRER
