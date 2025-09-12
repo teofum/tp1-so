@@ -57,16 +57,15 @@ int main(int argc, char **argv) {
   /*
    * Process player move requests until game ends
    */
-  uint32_t current_player;
-  move_t move;
   while (!state->game_ended) {
-    int player_will_move = players_next(players, &current_player, &move);
-
-    if (player_will_move < 0) {
+    player_move_t next_move = players_next(players);
+    if (next_move.error) {
       perror("Players next failed");
       return -1;
-    } else if (player_will_move) {
-      if (process_move(game, current_player, move)) {
+    }
+
+    if (next_move.will_move) {
+      if (process_move(game, next_move.player_idx, next_move.move)) {
         timeout_reset(timeout);
       }
     }

@@ -10,6 +10,16 @@
 typedef struct players_cdt_t *players_t;
 
 /*
+ * Move struct
+ */
+typedef struct {
+  int error;
+  int will_move;
+  uint32_t player_idx;
+  move_t move;
+} player_move_t;
+
+/*
  * Callback function to run some code when a player exits during
  * players_wait_all function call
  */
@@ -22,14 +32,11 @@ typedef void (*player_wait_callback_t)(player_t *player, int ret);
 players_t players_create(game_t game, args_t *args);
 
 /*
- * Checks whether the next player in the round order has sent a move. The index
- * of the next player is written to next_player.
- * If there is a move, the function returns a positive integer and the move is
- * written to move. If the player has not sent a move, the return value is zero
- * and the value of move is undefined.
- * If there is an error, the function returns a negative value and errno is set.
+ * Checks whether the next player in the round order has sent a move.
+ * Returns a struct containing information about the next move. If an error
+ * happens, the struct "error" field is set to 1 and errno is set.
  */
-int players_next(players_t players, uint32_t *next_player, move_t *move);
+player_move_t players_next(players_t players);
 
 /*
  * Returns 1 if all players are blocked, otherwise returns 0.

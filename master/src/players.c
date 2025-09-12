@@ -63,33 +63,36 @@ static int players_select(players_t players) {
   return select(max_pipe + 1, &players->current_fds, NULL, NULL, &timeout_zero);
 }
 
-int players_next(players_t players, uint32_t *next_player, move_t *move) {
-  *next_player = players->current_player_idx;
-  int next_player_pipe = players->pipe_fds[*next_player];
+player_move_t players_next(players_t players) {
+  int next_player = players->current_player_idx;
+  int next_player_pipe = players->pipe_fds[next_player];
 
   int res;
+  char move; // Read to a char because C enums are always 4 bytes
 
   // If the fdset is empty we need to call select
   // On error, return error and let the caller handle it
   if (players_fdset_empty(players)) {
     res = players_select(players);
     if (res < 0)
-      return res;
+      return (player_move_t){.error = 1};
   }
 
   // Next player is ready to read
   if (FD_ISSET(next_player_pipe, &players->current_fds)) {
-    char c_move; // Read to a char because C enums are always 4 bytes
-    res = read(next_player_pipe, &c_move, 1);
-    *move = c_move;
+    res = read(next_player_pipe, &move, 1);
+    if (res < 0)
+      return (player_move_t){.error = 1};
   }
 
   // Advance player
   players->current_player_idx =
       (players->current_player_idx + 1) % players->game_state->n_players;
 
-  // Return the value of read, or -1 on error in either select or read
-  return res;
+  return (player_move_t){.error = 0,
+                         .will_move = res > 0,
+                         .player_idx = next_player,
+                         .move = move};
 }
 
 int players_all_blocked(players_t players) {
