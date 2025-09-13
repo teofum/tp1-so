@@ -79,5 +79,7 @@ int main(int argc, char **argv) {
     write(STDOUT_FILENO, &next_move, 1);
   }
 
+  free(local_state);
+
   return 0;
 }
