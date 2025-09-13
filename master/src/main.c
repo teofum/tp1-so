@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
   /*
    * Wait for child processes and clean up resources
    */
+  timeout_destroy(timeout);
   view_wait(view, view_wait_callback);
   players_wait_all(players, player_wait_callback);
 

@@ -53,4 +53,6 @@ void view_wait(view_t view, view_wait_callback_t callback) {
     if (callback)
       callback(view->pid, ret);
   }
+
+  free(view);
 }
