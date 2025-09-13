@@ -66,19 +66,36 @@ int checkBox( int x, int y, game_state_t* game_state){
 
 // todo, implement proper weights
 // para Mk3
-int checkBoxWeighted( int x, int y, game_state_t* game_state){
+int checkBoxWeighted(int x, int y, game_state_t* game_state) {
   int sum = 0;
-  for(int dy=-1; dy<=1; ++dy){
-    for(int dx=-1; dx<=1; ++dx){
-      if( inBounds( x + dx, y + dy, game_state ) ){
-        int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
+  int suicidal = 0;
+
+  // Define Gaussian kernel
+  int kernel[3][3] = {
+    {1, 2, 1},
+    {2, 4, 2},
+    {1, 2, 1}
+  };
+  
+  for(int dy = -1; dy <= 1; ++dy) {
+    for(int dx = -1; dx <= 1; ++dx) {
+      if(inBounds(x + dx, y + dy, game_state)) {
+        int kernelIndex = (x + dx) + ((y + dy) * game_state->board_width);
         int aux = game_state->board[kernelIndex];
-        sum += (aux * aux);
+        sum += (aux * aux) * kernel[dy + 1][dx + 1]; // Apply Gaussian weight
+      }else{
+        ++suicidal;
       }
     }
   }
-  return sum;
+
+  if(suicidal>=8){//will kill himself
+    return 1;
+  }else{
+    return sum;
+  }
 }
+
 
 
 char get_next_move_Mk1(game_state_t* game_state, int player_idx) {
@@ -100,8 +117,11 @@ char get_next_move_Mk1(game_state_t* game_state, int player_idx) {
       }    
     }
   }
-
-  return next;
+  if(next==1){ // case todas las opciones son suicidio
+    return get_next_move_Mk1(game_state,player_idx);
+  }else{
+    return next;
+  }
 }
 
 char get_next_move_Mk2(game_state_t* game_state, int player_idx) {
@@ -250,7 +270,7 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    next_move = get_next_move_Mk2(state,player_idx);//, next_move);
+    next_move = get_next_move_Mk3(state,player_idx);//, next_move);
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
