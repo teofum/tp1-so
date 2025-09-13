@@ -117,11 +117,8 @@ char get_next_move_Mk1(game_state_t* game_state, int player_idx) {
       }    
     }
   }
-  if(next==1){ // case todas las opciones son suicidio
-    return get_next_move_Mk1(game_state,player_idx);
-  }else{
-    return next;
-  }
+  
+  return next;
 }
 
 char get_next_move_Mk2(game_state_t* game_state, int player_idx) {
@@ -270,7 +267,7 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    next_move = get_next_move_Mk3(state,player_idx);//, next_move);
+    next_move = get_next_move_Mk2(state,player_idx);//, next_move);
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
