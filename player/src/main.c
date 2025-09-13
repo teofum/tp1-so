@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    next_move = get_next_move_Mk4(state,player_idx, next_move);
+    next_move = get_next_move(&local_state, player_idx, next_move);
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
