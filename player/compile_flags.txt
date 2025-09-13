@@ -1,5 +1,5 @@
 -Iinclude
 -I../lib/include
 -Wall
--DSTRAT_GREEDY
+-DSTRAT_MIXED
 -DGREEDY_STOCHASTIC

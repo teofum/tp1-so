@@ -20,6 +20,7 @@ player: out docker out/chompchamps.a
 	ln player/out/psgreedy out/psgreedy
 	ln player/out/psgreedy_box out/psgreedy_box
 	ln player/out/psgreedy_w out/psgreedy_w
+	ln player/out/pmixed_box out/pmixed_box
 
 view: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/view

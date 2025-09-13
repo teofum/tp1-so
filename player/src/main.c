@@ -16,16 +16,6 @@ void cleanup() {
   if (game)
     game_disconnect(game);
 }
-#include <stdlib.h>
-#include <string.h>
-
-#include <stdlib.h>
-#include <string.h>
-
-static inline int inside_rect(int x, int y, int w, int h) {
-    return (x >= 0 && y >= 0 && x < w && y < h);
-}
-
 
 int main(int argc, char **argv) {
   /*
