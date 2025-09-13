@@ -7,55 +7,55 @@ INCLUDES=../lib/include
 SOURCES=$(wildcard src/*.c)
 OBJECTS=$(foreach I,$(SOURCES:.c=.o),build/$(notdir $I))
 
-all: out/player_blind  out/player_naive  out/player_greedy  out/player_greedy_box  out/player_greedy_weighted  out/player_sgreedy  out/player_sgreedy_box  out/player_sgreedy_weighted
+all: out/pblind  out/pnaive  out/pgreedy  out/pgreedy_box  out/pgreedy_w  out/psgreedy  out/psgreedy_box  out/psgreedy_w
 
 # "Blind" strategy
-out/player_blind: GCCFLAGS += -DSTRAT_BLIND
-out/player_blind: out build $(OBJECTS) $(STATICLIBS)
+out/pblind: GCCFLAGS += -DSTRAT_BLIND
+out/pblind: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_blind $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/pblind $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Naive" strategy
-out/player_naive: GCCFLAGS += -DSTRAT_NAIVE
-out/player_naive: out build $(OBJECTS) $(STATICLIBS)
+out/pnaive: GCCFLAGS += -DSTRAT_NAIVE
+out/pnaive: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_naive $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/pnaive $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Greedy" strategy + simple scoring
-out/player_greedy: GCCFLAGS += -DSTRAT_GREEDY
-out/player_greedy: out build $(OBJECTS) $(STATICLIBS)
+out/pgreedy: GCCFLAGS += -DSTRAT_GREEDY
+out/pgreedy: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_greedy $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/pgreedy $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Greedy" strategy + box scoring
-out/player_greedy_box: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_VALUE_BOX
-out/player_greedy_box: out build $(OBJECTS) $(STATICLIBS)
+out/pgreedy_box: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_VALUE_BOX
+out/pgreedy_box: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_greedy_box $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/pgreedy_box $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Greedy" strategy + weighted scoring
-out/player_greedy_weighted: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_VALUE_WEIGHTED
-out/player_greedy_weighted: out build $(OBJECTS) $(STATICLIBS)
+out/pgreedy_w: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_VALUE_WEIGHTED
+out/pgreedy_w: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_greedy_weighted $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/pgreedy_w $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Stochastic Greedy" strategy + simple scoring
-out/player_sgreedy: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_STOCHASTIC
-out/player_sgreedy: out build $(OBJECTS) $(STATICLIBS)
+out/psgreedy: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_STOCHASTIC
+out/psgreedy: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_sgreedy $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/psgreedy $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Stochastic Greedy" strategy + box scoring
-out/player_sgreedy_box: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_STOCHASTIC -DGREEDY_VALUE_BOX
-out/player_sgreedy_box: out build $(OBJECTS) $(STATICLIBS)
+out/psgreedy_box: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_STOCHASTIC -DGREEDY_VALUE_BOX
+out/psgreedy_box: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_sgreedy_box $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/psgreedy_box $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Stochastic Greedy" strategy + weighted scoring
-out/player_sgreedy_weighted: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_STOCHASTIC -DGREEDY_VALUE_WEIGHTED
-out/player_sgreedy_weighted: out build $(OBJECTS) $(STATICLIBS)
+out/psgreedy_w: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_STOCHASTIC -DGREEDY_VALUE_WEIGHTED
+out/psgreedy_w: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/player_sgreedy_weighted $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/psgreedy_w $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 build/%.o: src/%.c
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c $< -o $@
