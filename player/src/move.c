@@ -240,6 +240,7 @@ int bfs_area_or_player(int x, int y, game_state_t *game_state, int player_idx) {
     }
   }
 
+  free(visited);
   return area; // 0 means either found a player OR no passable tiles reachable
 }
 
