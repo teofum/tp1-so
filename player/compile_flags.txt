@@ -1,3 +1,5 @@
 -Iinclude
 -I../lib/include
 -Wall
+-DSTRAT_GREEDY
+-DGREEDY_STOCHASTIC

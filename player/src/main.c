@@ -1,5 +1,7 @@
 #include <args.h>
 #include <game.h>
+#include <move.h>
+#include <utils.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,204 +15,6 @@ game_t game = NULL;
 void cleanup() {
   if (game)
     game_disconnect(game);
-}
-
-// Convert diff 'x and y' into char dir
-// !Asume que no hay dx=dy=0 que no deberia pasar
-char getDir(int dx, int dy) {
-  char dirs[3][3] = {{7, 0, 1}, {6, -1, 2}, {5, 4, 3}};
-
-  return dirs[dy + 1][dx + 1];
-}
-// Convert a cahr dir into its corresponding
-// dx and dy
-int getX(char dir) {
-  int x[8] = {0, 1, 1, 1, 0, -1, -1, -1};
-  return x[dir];
-}
-int getY(char dir) {
-  int y[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
-  return y[dir];
-}
-
-// returns 0 if out of bounds
-int inBounds(int x, int y, game_state_t *gs) {
-  if (x < 0 || y < 0 || x >= gs->board_width || y >= gs->board_height ||
-      (gs->board[x + (y * gs->board_width)] <= 0)) {
-    return 0;
-  }
-  return 1;
-}
-
-// para Mk2+
-int checkBox(int x, int y, game_state_t *game_state) {
-  int sum = 0;
-  int suicidal = 0;
-  for (int dy = -1; dy <= 1; ++dy) {
-    for (int dx = -1; dx <= 1; ++dx) {
-      if (inBounds(x + dx, y + dy, game_state)) {
-        int kernelIndex = ((x + dx) + ((y + dy) * game_state->board_width));
-        sum += game_state->board[kernelIndex];
-      } else {
-        ++suicidal;
-      }
-    }
-  }
-
-  if (suicidal >= 8) { // will kill himself
-    return 1;
-  } else {
-    return sum;
-  }
-}
-
-// todo, implement proper weights
-// para Mk3
-int checkBoxWeighted(int x, int y, game_state_t *game_state) {
-  int sum = 0;
-  int suicidal = 0;
-
-  // Define Gaussian kernel
-  int kernel[3][3] = {{1, 2, 1}, {2, 4, 2}, {1, 2, 1}};
-
-  for (int dy = -1; dy <= 1; ++dy) {
-    for (int dx = -1; dx <= 1; ++dx) {
-      if (inBounds(x + dx, y + dy, game_state)) {
-        int kernelIndex = (x + dx) + ((y + dy) * game_state->board_width);
-        int aux = game_state->board[kernelIndex];
-        sum += (aux * aux) * kernel[dy + 1][dx + 1]; // Apply Gaussian weight
-      } else {
-        ++suicidal;
-      }
-    }
-  }
-
-  if (suicidal >= 8) { // will kill himself
-    return 1;
-  } else {
-    return sum;
-  }
-}
-
-char get_next_move_Mk1(game_state_t *game_state, int player_idx) {
-  char next = -1;
-  int maxp = -1;
-
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  for (int dy = -1; dy <= 1; ++dy) {
-    for (int dx = -1; dx <= 1; ++dx) {
-      if (inBounds(x + dx, y + dy, game_state)) {
-        int kernelIndex = ((x + dx) + ((y + dy) * game_state->board_width));
-        int val = game_state->board[kernelIndex];
-        if (val > maxp) {
-          next = getDir(dx, dy);
-          maxp = val;
-        }
-      }
-    }
-  }
-
-  return next;
-}
-
-char get_next_move_Mk2(game_state_t *game_state, int player_idx) {
-  char next = -1;
-  int max = -1;
-
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  for (int dy = -1; dy <= 1; ++dy) {
-    for (int dx = -1; dx <= 1; ++dx) {
-      if (!(dx == 0 && dy == 0) && inBounds(x + dx, y + dy, game_state)) {
-        int cuadVal = checkBox(x + dx, y + dy, game_state);
-        if (cuadVal > max) {
-          next = getDir(dx, dy);
-          max = cuadVal;
-        }
-      }
-    }
-  }
-  if (next == 1) { // case todas las opciones son suicidio
-    return get_next_move_Mk1(game_state, player_idx);
-  } else {
-    return next;
-  }
-}
-
-char get_next_move_Mk3(game_state_t *game_state, int player_idx) {
-  char next = -1;
-  int max = -1;
-
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  for (int dy = -1; dy <= 1; ++dy) {
-    for (int dx = -1; dx <= 1; ++dx) {
-      if (!(dx == 0 && dy == 0) && inBounds(x + dx, y + dy, game_state)) {
-        int cuadVal = checkBoxWeighted(x + dx, y + dy, game_state);
-        if (cuadVal > max) {
-          next = getDir(dx, dy);
-          max = cuadVal;
-        }
-      }
-    }
-  }
-  return next;
-}
-
-// Si usamos el walk antes y gira contra una pared es menos probable que deje
-// espacios
-char get_next_move_WallHug_L(game_state_t *game_state, int player_idx,
-                             char prev) {
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  char check = (prev + 6) % 8; // char check = (prev+7)%8; //puede funcionar
-  if (inBounds(x + getX(check), y + getY(check), game_state)) {
-    return check;
-  } else {
-    for (char next = prev; next < prev + 8; ++next) {
-      if (inBounds(x + getX((next) % 8), y + getY((next) % 8), game_state)) {
-        return (next) % 8;
-      }
-    }
-  }
-  return -1;
-}
-char get_next_move_WallHug_R(game_state_t *game_state, int player_idx,
-                             char prev) {
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  prev += 2 * 8; // padding to stay positive :)
-
-  char check = (prev + 2) % 8; // char check = (prev+1)%8; //puede funcionar
-  if (inBounds(x + getX(check), y + getY(check), game_state)) {
-    return check;
-  } else {
-    for (char next = prev; next > (prev - 8); --next) {
-      if (inBounds(x + getX((next) % 8), y + getY((next) % 8), game_state)) {
-        return (next) % 8;
-      }
-    }
-  }
-  return -1;
-}
-
-// Sigue derecho hasta toparse con una pared
-char walk(game_state_t *game_state, int player_idx, char prev, char *start) {
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  if (inBounds(x + getX(prev), y + getY(prev), game_state)) {
-    return prev;
-  } else {
-    *start = 0;
-    return -1; // TODO: cuando se implementa puede llamar al prowimo movimiento
-  }
 }
 
 int main(int argc, char **argv) {
@@ -267,7 +71,7 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    next_move = get_next_move_Mk2(&local_state, player_idx);
+    next_move = get_next_move(&local_state, player_idx, next_move);
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
