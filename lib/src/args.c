@@ -10,8 +10,8 @@ extern char *optarg;
 int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
   // Initialize default args
   args->width = args->height = 10;
-  args->delay = 200;
-  args->timeout = 10;
+  args->delay = 50;
+  args->timeout = 20;
   args->seed = time(NULL);
   args->view = NULL;
 
