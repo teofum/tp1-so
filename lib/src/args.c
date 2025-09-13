@@ -7,7 +7,9 @@
 
 extern char *optarg;
 
-int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
+args_t *parse_args(int argc, char *const *argv, const char **err) {
+  args_t *args = malloc(sizeof(args_t));
+
   // Initialize default args
   args->width = args->height = 10;
   args->delay = 50;
@@ -27,7 +29,7 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
       if (w < 10) {
         if (err)
           *err = "Board width must be at least 10";
-        return 0;
+        return NULL;
       }
       args->width = w;
       break;
@@ -37,7 +39,7 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
       if (h < 10) {
         if (err)
           *err = "Board height must be at least 10";
-        return 0;
+        return NULL;
       }
       args->height = h;
       break;
@@ -47,7 +49,7 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
       if (d < 0) {
         if (err)
           *err = "Delay must be a non negative integer";
-        return 0;
+        return NULL;
       }
       args->delay = d;
       break;
@@ -57,7 +59,7 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
       if (t <= 0) {
         if (err)
           *err = "Timeout must be a positive integer";
-        return 0;
+        return NULL;
       }
       args->timeout = t;
       break;
@@ -78,7 +80,7 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
         if (i == MAX_PLAYERS) {
           if (err)
             *err = "Too many players";
-          return 0;
+          return NULL;
         }
         args->players[i++] = strdup(argv[optind++]);
       }
@@ -90,14 +92,16 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
   if (args->players[0] == NULL) {
     if (err)
       *err = "No players";
-    return 0;
+    return NULL;
   }
 
-  return 1;
+  return args;
 }
 
 void free_args(args_t *args) {
   free((void *)args->view);
   for (int i = 0; args->players[i] != NULL; i++)
     free((void *)args->players[i]);
+
+  free(args);
 }

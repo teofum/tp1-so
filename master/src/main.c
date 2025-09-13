@@ -1,3 +1,4 @@
+#include "args.h"
 #include <callback.h>
 #include <game.h>
 #include <move.h>
@@ -23,17 +24,16 @@ int main(int argc, char **argv) {
   const char *err;
 
   // Parse args
-  args_t args;
-  if (!parse_args(argc, argv, &args, &err)) {
-    free_args(&args);
+  args_t *args = parse_args(argc, argv, &err);
+  if (!args) {
     fprintf(stderr, "Parse error: %s\n", err);
     return -1;
   }
 
   // Initialize game
-  game = game_init(&args, &err);
+  game = game_init(args, &err);
   if (!game) {
-    free_args(&args);
+    free_args(args);
     fprintf(stderr, "Game initialization failed: %s\n", err);
     return -1;
   }
@@ -45,13 +45,13 @@ int main(int argc, char **argv) {
   /*
    * Spawn view and players
    */
-  view_t view = view_create(game, &args);
+  view_t view = view_create(game, args);
   if (!view) {
     fprintf(stderr, "View initialization failed\n");
     return -1;
   }
 
-  players_t players = players_create(game, &args);
+  players_t players = players_create(game, args);
   if (!players) {
     fprintf(stderr, "Player initialization failed\n");
     return -1;
@@ -60,8 +60,8 @@ int main(int argc, char **argv) {
   /*
    * Timeout
    */
-  timeout_t timeout = timeout_create(sec_to_micros(args.timeout));
-  free_args(&args);
+  timeout_t timeout = timeout_create(sec_to_micros(args->timeout));
+  free_args(args);
 
   /*
    * Process player move requests until game ends
