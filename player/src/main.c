@@ -189,7 +189,7 @@ char get_next_move_WallHug_R(game_state_t* game_state, int player_idx, char prev
   int x = game_state->players[player_idx].x;
   int y = game_state->players[player_idx].y;
 
-  prev+=2*8;
+  prev+=2*8; // padding to stay positive :)
 
   char check = (prev+2)%8;//char check = (prev+1)%8; //puede funcionar
   if(inBounds( x + getX(check), y + getY(check), game_state)){
@@ -256,6 +256,8 @@ int main(int argc, char **argv) {
   while (running) {
     game_wait_move_processed(game, player_idx);
     game_will_read_state(game);
+
+    game_clone_state(game);
 
     // If the game ended or we're blocked, stop
     if (state->game_ended || state->players[player_idx].blocked) {
