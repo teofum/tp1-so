@@ -72,14 +72,15 @@ int parse_args(int argc, char *const *argv, args_t *args, const char **err) {
     }
     case 'p': {
       int i = 0;
-      for (char *word = strtok(optarg, " "); word; word = strtok(NULL, " ")) {
-        args->players[i] = strdup(word);
 
-        if (++i > MAX_PLAYERS) {
+      optind--;
+      while (optind < argc && argv[optind][0] != '-') {
+        if (i == MAX_PLAYERS) {
           if (err)
             *err = "Too many players";
           return 0;
         }
+        args->players[i++] = strdup(argv[optind++]);
       }
       break;
     }
