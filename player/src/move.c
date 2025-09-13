@@ -66,15 +66,21 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
   static int kernel[3][3] = {{1, 2, 1}, {2, 4, 2}, {1, 2, 1}};
 
   int sum = 0;
+  int blocked = 0;
 
   for (int dy = -1; dy <= 1; ++dy) {
     for (int dx = -1; dx <= 1; ++dx) {
       if (available(x + dx, y + dy, gs)) {
         int value = gs->board[(x + dx) + (y + dy) * gs->board_width];
         sum += (value * value) * kernel[dy + 1][dx + 1];
+      } else {
+        blocked++;
       }
     }
   }
+
+  if (blocked == 8)
+    return 1;
 
   return sum;
 }
@@ -90,14 +96,20 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
  */
 static int scoring_fn(game_state_t *gs, int x, int y) {
   int sum = 0;
+  int blocked = 0;
 
   for (int dy = -1; dy <= 1; ++dy) {
     for (int dx = -1; dx <= 1; ++dx) {
       if (available(x + dx, y + dy, gs)) {
         sum += gs->board[(x + dx) + (y + dy) * gs->board_width];
+      } else {
+        blocked++;
       }
     }
   }
+
+  if (blocked == 8)
+    return 1;
 
   return sum;
 }
@@ -235,12 +247,12 @@ char wallhug(game_state_t *game_state, int player_idx, char prev) {
   int x = game_state->players[player_idx].x;
   int y = game_state->players[player_idx].y;
 
-  char check = (prev + 6) % 8; // char check = (prev+7)%8; //puede funcionar
-  if (check_bounds(x + dx(check), y + dy(check), game_state)) {
+  char check = (prev + 6) % 8;
+  if (available(x + dx(check), y + dy(check), game_state)) {
     return check;
   } else {
     for (char next = prev; next < prev + 8; ++next) {
-      if (check_bounds(x + dx((next) % 8), y + dy((next) % 8), game_state)) {
+      if (available(x + dx((next) % 8), y + dy((next) % 8), game_state)) {
         return (next) % 8;
       }
     }
