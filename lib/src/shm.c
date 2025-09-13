@@ -14,7 +14,7 @@ void *shm_open_and_map(const char *name, shm_mode_t mode, size_t size) {
   if (mode & SHM_READ_WRITE)
     shm_mode |= O_RDWR;
   if (mode & SHM_CREATE)
-    shm_mode |= (O_CREAT | O_EXCL);
+    shm_mode |= O_CREAT;
 
   int fd = shm_open(name, shm_mode, 0);
   if (fd < 0)

@@ -1,12 +1,15 @@
 #ifndef TIMEOUT_H
 #define TIMEOUT_H
 
+#define sec_to_micros(x) ((x) * 1000000)
+
 #include <stdint.h>
 
 typedef struct timeout_cdt_t *timeout_t;
+typedef struct timeval timeval_t;
 
 /*
- * Create a new timeout. Takes the duration, in seconds.
+ * Create a new timeout. Takes the duration, in microseconds.
  */
 timeout_t timeout_create(uint64_t duration);
 
@@ -15,6 +18,11 @@ timeout_t timeout_create(uint64_t duration);
  * 0 otherwise.
  */
 int timeout_check(timeout_t timeout);
+
+/*
+ * Query remaining time on the timeout, in microseconds.
+ */
+uint64_t timeout_remaining(timeout_t timeout);
 
 /*
  * Reset a timeout.

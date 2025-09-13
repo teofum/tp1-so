@@ -1,6 +1,7 @@
 #include <game.h>
 #include <game_state_impl.h>
 #include <game_sync.h>
+#include <sem.h>
 #include <shm.h>
 
 #include <stdlib.h>
@@ -98,9 +99,9 @@ void game_destroy(game_t game) {
 
 void game_end(game_t game) {
   // Release all locks to allow processes to exit
-  sem_post(&game->sync->view_should_update);
+  semaphore_post(&game->sync->view_should_update);
   for (int i = 0; i < game->state->n_players; i++)
-    sem_post(&game->sync->player_may_move[i]);
+    semaphore_post(&game->sync->player_may_move[i]);
 
   game->state->game_ended = 1;
 }
@@ -115,52 +116,52 @@ game_state_t game_clone_state(game_t game) { return *game->state; }
 
 void game_will_read_state(game_t game) {
   // Wait for writer
-  sem_wait(&game->sync->master_write_mutex);
-  sem_post(&game->sync->master_write_mutex);
+  semaphore_wait(&game->sync->master_write_mutex);
+  semaphore_post(&game->sync->master_write_mutex);
 
   // Lightswitch sync
-  sem_wait(&game->sync->read_count_mutex);
+  semaphore_wait(&game->sync->read_count_mutex);
   if (game->sync->read_count++ == 0) {
-    sem_wait(&game->sync->game_state_mutex);
+    semaphore_wait(&game->sync->game_state_mutex);
   }
-  sem_post(&game->sync->read_count_mutex);
+  semaphore_post(&game->sync->read_count_mutex);
 }
 
 void game_did_read_state(game_t game) {
-  sem_wait(&game->sync->read_count_mutex);
+  semaphore_wait(&game->sync->read_count_mutex);
   if (--game->sync->read_count == 0) {
-    sem_post(&game->sync->game_state_mutex);
+    semaphore_post(&game->sync->game_state_mutex);
   }
-  sem_post(&game->sync->read_count_mutex);
+  semaphore_post(&game->sync->read_count_mutex);
 }
 
 void game_lock_state_for_writing(game_t game) {
-  sem_wait(&game->sync->master_write_mutex);
-  sem_wait(&game->sync->game_state_mutex);
-  sem_post(&game->sync->master_write_mutex);
+  semaphore_wait(&game->sync->master_write_mutex);
+  semaphore_wait(&game->sync->game_state_mutex);
+  semaphore_post(&game->sync->master_write_mutex);
 }
 
 void game_release_state(game_t game) {
-  sem_post(&game->sync->game_state_mutex);
+  semaphore_post(&game->sync->game_state_mutex);
 }
 
 void game_wait_move_processed(game_t game, size_t player_idx) {
-  sem_wait(&game->sync->player_may_move[player_idx]);
+  semaphore_wait(&game->sync->player_may_move[player_idx]);
 }
 
 void game_post_move_processed(game_t game, size_t player_idx) {
-  sem_post(&game->sync->player_may_move[player_idx]);
+  semaphore_post(&game->sync->player_may_move[player_idx]);
 }
 
 void game_update_view(game_t game) {
-  sem_post(&game->sync->view_should_update);
-  sem_wait(&game->sync->view_did_update);
+  semaphore_post(&game->sync->view_should_update);
+  semaphore_wait(&game->sync->view_did_update);
 }
 
 void game_wait_view_should_update(game_t game) {
-  sem_wait(&game->sync->view_should_update);
+  semaphore_wait(&game->sync->view_should_update);
 }
 
 void game_post_view_did_update(game_t game) {
-  sem_post(&game->sync->view_did_update);
+  semaphore_post(&game->sync->view_did_update);
 }

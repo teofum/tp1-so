@@ -1,3 +1,4 @@
+#include <callback.h>
 #include <game.h>
 #include <move.h>
 #include <players.h>
@@ -7,6 +8,13 @@
 
 #include <stdio.h>
 #include <sys/wait.h>
+
+game_t game = NULL;
+
+void cleanup() {
+  if (game)
+    game_destroy(game);
+}
 
 /*
  * Main function
@@ -23,12 +31,13 @@ int main(int argc, char **argv) {
   }
 
   // Initialize game
-  game_t game = game_init(&args, &err);
+  game = game_init(&args, &err);
   if (!game) {
     free_args(&args);
     fprintf(stderr, "Game initialization failed: %s\n", err);
     return -1;
   }
+  atexit(cleanup);
 
   // Get a pointer to the game state for convenience
   game_state_t *state = game_state(game);
@@ -51,22 +60,21 @@ int main(int argc, char **argv) {
   /*
    * Timeout
    */
-  timeout_t timeout = timeout_create(args.timeout);
+  timeout_t timeout = timeout_create(sec_to_micros(args.timeout));
   free_args(&args);
 
   /*
    * Process player move requests until game ends
    */
-  uint32_t current_player;
-  move_t move;
   while (!state->game_ended) {
-    int player_will_move = players_next(players, &current_player, &move);
-
-    if (player_will_move < 0) {
-      perror("Select failed");
+    player_move_t next_move = players_next(players, timeout);
+    if (next_move.error) {
+      perror("Players next failed");
       return -1;
-    } else if (player_will_move) {
-      if (process_move(game, current_player, move)) {
+    }
+
+    if (next_move.will_move) {
+      if (process_move(game, next_move.player_idx, next_move.move)) {
         timeout_reset(timeout);
       }
     }
@@ -80,9 +88,8 @@ int main(int argc, char **argv) {
   /*
    * Wait for child processes and clean up resources
    */
-  view_wait(view, NULL);
-  players_wait_all(players, NULL);
-  game_destroy(game);
+  view_wait(view, view_wait_callback);
+  players_wait_all(players, player_wait_callback);
 
   return 0;
 }

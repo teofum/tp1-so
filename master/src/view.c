@@ -33,7 +33,7 @@ view_t view_create(game_t game, args_t *args) {
   }
 
   view->game = game;
-  view->us_delay_after_update = args->delay * 10000;
+  view->us_delay_after_update = args->delay * 1000;
   return view;
 }
 
@@ -51,6 +51,6 @@ void view_wait(view_t view, view_wait_callback_t callback) {
     waitpid(view->pid, &ret, 0);
 
     if (callback)
-      callback(ret);
+      callback(view->pid, ret);
   }
 }
