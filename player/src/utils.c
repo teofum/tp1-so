@@ -24,7 +24,8 @@ int available(int x, int y, game_state_t *gs) {
   return check_bounds(x, y, gs) && gs->board[x + y * gs->board_width] > 0;
 }
 
-//#include "queue.c"///////////////////////////////////////////////////
+
+// queue for Mk4 ///////////////////////////////////////////////////
 #include <stdio.h>
 #include <stdbool.h>
 
