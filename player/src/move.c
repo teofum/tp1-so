@@ -33,8 +33,9 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
   char initial = move;
   while (!available(x + dx(move), y + dy(move), game_state)) {
     move = (move + 1) % 8;
-    if (move == initial)
+    if (move == initial) {
       return -1; // All directions are blocked
+    }
   }
 
   return move;
@@ -131,12 +132,14 @@ static char calculate_move(game_state_t *gs, int x, int y) {
   int values_sum = 0;       // Total
 
   for (int m = 0; m < 8; m++) {
-    if (available(x + dx(m), y + dy(m), gs)) {
-      int value = scoring_fn(gs, x + dx(m), y + dy(m));
+    int value = 0;
 
-      values_cumulative[m] = values_sum + value;
-      values_sum += value;
+    if (available(x + dx(m), y + dy(m), gs)) {
+      value = scoring_fn(gs, x + dx(m), y + dy(m));
     }
+
+    values_cumulative[m] = values_sum + value;
+    values_sum += value;
   }
 
   if (values_sum == 0)

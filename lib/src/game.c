@@ -5,6 +5,7 @@
 #include <shm.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * CDT for game ADT
@@ -110,7 +111,11 @@ void game_end(game_t game) {
 
 game_state_t *game_state(game_t game) { return game->state; }
 
-game_state_t game_clone_state(game_t game) { return *game->state; }
+size_t game_state_size(game_t game) { return game->state_size; }
+
+void game_clone_state(game_t game, game_state_t *dst) {
+  memcpy(dst, game->state, game->state_size);
+}
 
 // === Sync functions =========================================================
 

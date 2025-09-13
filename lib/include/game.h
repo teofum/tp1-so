@@ -48,11 +48,16 @@ void game_end(game_t game);
 game_state_t *game_state(game_t game);
 
 /*
+ * Get the size of the game_state struct in bytes
+ */
+size_t game_state_size(game_t game);
+
+/*
  * Get a copy of the game state at the time of calling this function. Readers
  * should lock and release the state before and after calling this function,
  * but may access the local copy freely afterwards.
  */
-game_state_t game_clone_state(game_t game);
+void game_clone_state(game_t game, game_state_t *dst);
 
 // === Sync functions =========================================================
 
