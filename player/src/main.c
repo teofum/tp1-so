@@ -45,15 +45,23 @@ int inBounds(int x,int y, game_state_t* gs){
 // para Mk2+
 int checkBox( int x, int y, game_state_t* game_state){
   int sum = 0;
+  int suicidal = 0;
   for(int dy=-1; dy<=1; ++dy){
     for(int dx=-1; dx<=1; ++dx){
       if( inBounds( x + dx, y + dy, game_state ) ){
         int kernelIndex = ((x + dx)+((y + dy) * game_state->board_width ));
         sum += game_state->board[kernelIndex];
+      }else{
+        ++suicidal;
       }
     }
   }
-  return sum;
+
+  if(suicidal>=8){//will kill himself
+    return 1;
+  }else{
+    return sum;
+  }
 }
 
 // todo, implement proper weights
@@ -114,7 +122,11 @@ char get_next_move_Mk2(game_state_t* game_state, int player_idx) {
       }
     }
   }
-  return next;
+  if(next==1){ // case todas las opciones son suicidio
+    return get_next_move_Mk1(game_state,player_idx);
+  }else{
+    return next;
+  }
 }
 
 
@@ -238,7 +250,7 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    next_move = get_next_move_WallHug_L(state,player_idx, next_move);
+    next_move = get_next_move_Mk2(state,player_idx);//, next_move);
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
