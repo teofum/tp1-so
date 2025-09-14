@@ -225,10 +225,10 @@ int bfs_area_or_player(int x, int y, game_state_t *game_state, int player_idx) {
       int2_t curr = {.x = pivot.x + dx(angle), .y = pivot.y + dy(angle)};
       int currIndex = curr.x + (curr.y * game_state->board_width);
 
-      for (int i = 0; i < game_state->n_players;
-           i++) { // check if player is on it
+      for (int i = 0; i < game_state->n_players; i++) {
         if (i != player_idx && game_state->players[i].x == curr.x &&
             game_state->players[i].y == curr.y) {
+          free(visited);
           return 0;
         }
       }
