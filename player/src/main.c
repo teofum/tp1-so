@@ -3,6 +3,7 @@
 #include <move.h>
 #include <utils.h>
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,7 +33,12 @@ int main(int argc, char **argv) {
     logerr("Failed to connect to game\n");
     return -1;
   }
+
+  // Make sure to disconnect the game on exit and on common signal termination
   atexit(cleanup);
+  signal(SIGTERM, cleanup);
+  signal(SIGSEGV, cleanup);
+  signal(SIGINT, cleanup);
 
   // Pointer to game state for convenience
   // This is the actual shared state, be careful when reading it!

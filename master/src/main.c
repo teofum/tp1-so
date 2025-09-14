@@ -7,6 +7,7 @@
 #include <timeout.h>
 #include <view.h>
 
+#include <signal.h>
 #include <stdio.h>
 #include <sys/wait.h>
 
@@ -37,7 +38,12 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Game initialization failed: %s\n", err);
     return -1;
   }
+
+  // Make sure to destroy the game on exit and on common signal termination
   atexit(cleanup);
+  signal(SIGTERM, cleanup);
+  signal(SIGSEGV, cleanup);
+  signal(SIGINT, cleanup);
 
   // Get a pointer to the game state for convenience
   game_state_t *state = game_state(game);

@@ -2,6 +2,7 @@
 #include <game.h>
 #include <graphics.h>
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -29,7 +30,12 @@ int main(int argc, char **argv) {
     printf("View: failed to connect to game\n");
     return -1;
   }
+
+  // Make sure to disconnect the game on exit and on common signal termination
   atexit(cleanup);
+  signal(SIGTERM, cleanup);
+  signal(SIGSEGV, cleanup);
+  signal(SIGINT, cleanup);
 
   game_state_t *state = game_state(game);
 
