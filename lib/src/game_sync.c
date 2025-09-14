@@ -17,7 +17,7 @@ void game_sync_init(game_sync_t *game_sync, uint32_t n_players) {
   }
 }
 
-void game_sync_free(game_sync_t *game_sync, uint32_t n_players) {
+void game_sync_destroy(game_sync_t *game_sync, uint32_t n_players) {
   semaphore_destroy(&game_sync->view_should_update);
   semaphore_destroy(&game_sync->view_did_update);
 

@@ -1,5 +1,7 @@
 #include <args.h>
 #include <game.h>
+#include <move.h>
+#include <utils.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,8 +16,6 @@ void cleanup() {
   if (game)
     game_disconnect(game);
 }
-
-char get_next_move() { return rand() % 8; }
 
 int main(int argc, char **argv) {
   /*
@@ -45,6 +45,9 @@ int main(int argc, char **argv) {
       player_idx = i;
   }
 
+  char next_move = -1;
+  game_state_t *local_state = malloc(game_state_size(game));
+
   srand(player_idx);
 
   /*
@@ -54,6 +57,8 @@ int main(int argc, char **argv) {
   while (running) {
     game_wait_move_processed(game, player_idx);
     game_will_read_state(game);
+
+    game_clone_state(game, local_state);
 
     // If the game ended or we're blocked, stop
     if (state->game_ended || state->players[player_idx].blocked) {
@@ -65,11 +70,15 @@ int main(int argc, char **argv) {
     if (!running)
       break;
 
-    char next_move = get_next_move();
+    next_move = get_next_move(local_state, player_idx, next_move);
+    if (next_move < 0)
+      break;
 
     // Send next move to master
     write(STDOUT_FILENO, &next_move, 1);
   }
+
+  free(local_state);
 
   return 0;
 }

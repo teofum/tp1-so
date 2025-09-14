@@ -26,10 +26,11 @@ typedef struct {
  * Parse CLI args from commandline. Takes an optional error parameter, if not
  * NULL the pointer will be set to an error string if parsing fails.
  */
-int parse_args(int argc, char *const *argv, args_t *args, const char **err);
+args_t *parse_args(int argc, char *const *argv, const char **err);
 
 /*
- * Helper function to free heap allocated strings in the args struct.
+ * Helper function to free heap allocated strings in the args struct and the
+ * struct itself.
  */
 void free_args(args_t *args);
 

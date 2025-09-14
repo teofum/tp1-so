@@ -74,8 +74,8 @@ player_move_t players_next(players_t players, timeout_t timeout) {
   int next_player = players->current_player_idx;
   int next_player_pipe = players->pipe_fds[next_player];
 
-  int res;
-  char move; // Read to a char because C enums are always 4 bytes
+  int res = 0;
+  char move = 0; // Read to a char because C enums are always 4 bytes
 
   // If the fdset is empty we need to call select
   // On error, return error and let the caller handle it

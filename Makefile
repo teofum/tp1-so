@@ -11,8 +11,18 @@ master_demo: out demo/master_demo
 
 player: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/player
-	rm -f out/player
-	ln player/out/player out/player
+	rm -f out/p*
+	ln player/out/pblind out/pblind
+	ln player/out/pnaive out/pnaive
+	ln player/out/pgreedy out/pgreedy
+	ln player/out/pgreedy_box out/pgreedy_box
+	ln player/out/pgreedy_w out/pgreedy_w
+	ln player/out/pgreedy_wl out/pgreedy_wl
+	ln player/out/psgreedy out/psgreedy
+	ln player/out/psgreedy_box out/psgreedy_box
+	ln player/out/psgreedy_w out/psgreedy_w
+	ln player/out/psgreedy_wl out/psgreedy_wl
+	ln player/out/pwall out/pwall
 
 view: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/view

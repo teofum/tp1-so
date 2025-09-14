@@ -13,7 +13,7 @@ void game_state_init(game_state_t *state, const args_t *args) {
 
   // Count players
   uint32_t n_players = 0;
-  for (uint32_t i = 0; args->players[i] != NULL && i < MAX_PLAYERS; i++) {
+  for (uint32_t i = 0; i < MAX_PLAYERS && args->players[i] != NULL; i++) {
     n_players++;
   }
 
@@ -26,6 +26,9 @@ void game_state_init(game_state_t *state, const args_t *args) {
 
   // Calculate board size
   size_t board_size = state->board_width * state->board_height;
+
+  // Seed the random number generator with the provided seed
+  srand(args->seed);
 
   // Initialize board with rewards from 1 to 9
   for (size_t i = 0; i < board_size; i++) {

@@ -17,3 +17,4 @@ out/
 #shell crap
 .bash_history
 .lesshst
+strace_out
