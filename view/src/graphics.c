@@ -205,9 +205,9 @@ void draw_player_card(int player_idx, game_state_t *game_state) {
   move(y1 + 1, x1 + 1);
   printw("%-8s%s", player.name, player.blocked ? " [BLOCK]" : "");
   move(y1 + 2, x1 + 1);
-  printw("Score: %d", player.score);
+  printw("Score: %u", player.score);
   move(y1 + 3, x1 + 1);
-  printw("Moves: %d/%d", player.requests_valid, player.requests_invalid);
+  printw("Moves: %u/%u", player.requests_valid, player.requests_invalid);
 
   if (card_width > 23) {
     get_cell_contents(buf, -player_idx, player.y, player.x, game_state);
@@ -279,7 +279,7 @@ void draw_game_over(game_state_t *game_state) {
   for (int i = 0; i < game_state->n_players; i++) {
     attr_set(A_NORMAL, CP_PLAYER + players[i].pid, NULL);
     move(y1 + 6 + i, x1 + (GAME_OVER_WIDTH - 30) / 2);
-    printw("%d %-8s %5d %5d %7d", players[i].pid + 1, players[i].name,
+    printw("%d %-8s %5u %5u %7u", players[i].pid + 1, players[i].name,
            players[i].score, players[i].requests_valid,
            players[i].requests_invalid);
   }
