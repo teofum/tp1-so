@@ -1,13 +1,9 @@
-all: master master_demo player view
+all: master player view
 
 master: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/master
 	rm -f out/master
 	ln master/out/master out/master
-
-master_demo: out demo/master_demo
-	rm -f out/master_demo
-	ln demo/master_demo out/master_demo
 
 player: out docker out/chompchamps.a
 	docker exec -it so-builder make all -C /root/player
@@ -54,8 +50,6 @@ docker:
 docker_pull:
 	docker pull agodio/itba-so-multi-platform:3.0
 	docker run -d -v "${PWD}:/root" --security-opt seccomp:unconfined -it --name so-builder --platform=linux/amd64 --privileged agodio/itba-so-multi-platform:3.0
-#	docker run -d -v "$(shell pwd):/root" --security-opt seccomp:unconfined -it --name so-builder --platform=linux/amd64 --privileged agodio/itba-so-multi-platform:3.0
-#	tuve que usar este yo _(:v \)/_ (lolo)
 	docker exec -it so-builder apt install libncurses-dev
 
 .PHONY: master master_demo player view
