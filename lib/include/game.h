@@ -110,4 +110,15 @@ void game_wait_view_should_update(game_t game);
  */
 void game_post_view_did_update(game_t game);
 
+/*
+ * Signals the view has started correctly and is ready.
+ */
+void game_post_view_ready(game_t game);
+
+/*
+ * Waits for the view to be ready for a specified amount of time, in
+ * microseconds. If this time is exceeded, returns an error.
+ */
+int game_wait_for_view(game_t game, uint64_t timeout_us);
+
 #endif

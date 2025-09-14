@@ -176,3 +176,13 @@ void game_wait_view_should_update(game_t game) {
 void game_post_view_did_update(game_t game) {
   semaphore_post(&game->sync->view_did_update);
 }
+
+void game_post_view_ready(game_t game) {
+  // Abuse an existing semaphore for view-ready event, it's not being used yet
+  semaphore_post(&game->sync->view_did_update);
+}
+
+int game_wait_for_view(game_t game, uint64_t timeout_us) {
+  // Abuse an existing semaphore for view-ready event, it's not being used yet
+  return semaphore_timed_wait(&game->sync->view_did_update, timeout_us);
+}

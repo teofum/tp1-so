@@ -25,6 +25,9 @@ int main(int argc, char **argv) {
   int width = atoi(argv[1]);
   int height = atoi(argv[2]);
 
+  /*
+   * Connect to game
+   */
   game = game_connect(width, height);
   if (!game) {
     printf("View: failed to connect to game\n");
@@ -36,6 +39,9 @@ int main(int argc, char **argv) {
   signal(SIGTERM, cleanup);
   signal(SIGSEGV, cleanup);
   signal(SIGINT, cleanup);
+
+  // Signal to master view is ready and started successfully
+  game_post_view_ready(game);
 
   game_state_t *state = game_state(game);
 

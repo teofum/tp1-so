@@ -40,6 +40,13 @@ int semaphore_destroy(sem_t *sem);
 int semaphore_wait(sem_t *sem);
 
 /*
+ * If the semaphore value is positive, decrease it and continue.
+ * If it is zero, blocks until there is a positive value or time runs out.
+ * Returns an error if timed out.
+ */
+int semaphore_timed_wait(sem_t *sem, uint64_t timeout);
+
+/*
  * Increment the semaphore value by 1.
  */
 int semaphore_post(sem_t *sem);
