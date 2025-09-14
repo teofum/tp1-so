@@ -100,7 +100,7 @@ args_t *parse_args(int argc, char *const *argv, const char **err) {
 
 void free_args(args_t *args) {
   free((void *)args->view);
-  for (int i = 0; args->players[i] != NULL; i++)
+  for (int i = 0; i < MAX_PLAYERS && args->players[i] != NULL; i++)
     free((void *)args->players[i]);
 
   free(args);

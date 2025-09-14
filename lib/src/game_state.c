@@ -13,7 +13,7 @@ void game_state_init(game_state_t *state, const args_t *args) {
 
   // Count players
   uint32_t n_players = 0;
-  for (uint32_t i = 0; args->players[i] != NULL && i < MAX_PLAYERS; i++) {
+  for (uint32_t i = 0; i < MAX_PLAYERS && args->players[i] != NULL; i++) {
     n_players++;
   }
 
