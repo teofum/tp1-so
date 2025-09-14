@@ -80,7 +80,7 @@ static char wallhug(game_state_t *game_state, int player_idx, char prev) {
   if (available(x + dx(check), y + dy(check), game_state))
     return check;
 
-  for (char next = prev; next > (prev - 8); --next) {
+  for (char next = prev; next > prev - 8; --next) {
     char move = next % 8;
     if (available(x + dx(move), y + dy(move), game_state)) {
       return move;
@@ -102,6 +102,40 @@ static char wallhug(game_state_t *game_state, int player_idx, char prev) {
 /* ==========================================================================
  * Greedy algorithm scoring functions
  * ========================================================================== */
+#ifdef GREEDY_VALUE_WEIGHTED_L
+
+/*
+ * "Weighted Greedy Large" strategy value function
+ * A smarter greedy algorithm. Checks a 5x5 box around the adjacent cell for
+ * the one with the highest sum value, weighing the cells closer to the center
+ * higher.
+ * This scoring function assumes input is in bounds and available.
+ */
+static int scoring_fn(game_state_t *gs, int x, int y) {
+  // Define Gaussian kernel
+  static int kernel[3][3] = {{1, 4, 7}, {4, 16, 26}, {7, 26, 41}};
+
+  int sum = 0;
+  int blocked = 0;
+
+  for (int dy = -2; dy <= 2; ++dy) {
+    for (int dx = -2; dx <= 2; ++dx) {
+      if (available(x + dx, y + dy, gs)) {
+        int value = gs->board[(x + dx) + (y + dy) * gs->board_width];
+        sum += (value * value) * kernel[2 - abs(dy)][2 - abs(dx)];
+      } else if (dy > -2 && dy < 2 && dx > -2 && dx < 2) {
+        blocked++;
+      }
+    }
+  }
+
+  if (blocked == 8)
+    return 1;
+
+  return sum;
+}
+
+#else
 #ifdef GREEDY_VALUE_WEIGHTED
 
 /*
@@ -176,6 +210,7 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
   return gs->board[x + y * gs->board_width];
 }
 
+#endif
 #endif
 #endif
 

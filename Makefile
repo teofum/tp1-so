@@ -17,9 +17,11 @@ player: out docker out/chompchamps.a
 	ln player/out/pgreedy out/pgreedy
 	ln player/out/pgreedy_box out/pgreedy_box
 	ln player/out/pgreedy_w out/pgreedy_w
+	ln player/out/pgreedy_wl out/pgreedy_wl
 	ln player/out/psgreedy out/psgreedy
 	ln player/out/psgreedy_box out/psgreedy_box
 	ln player/out/psgreedy_w out/psgreedy_w
+	ln player/out/psgreedy_wl out/psgreedy_wl
 	ln player/out/pmixed_box out/pmixed_box
 	ln player/out/pwall out/pwall
 
