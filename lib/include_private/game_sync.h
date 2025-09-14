@@ -7,7 +7,7 @@
 #ifndef GAME_SYNC_H
 #define GAME_SYNC_H
 
-#include <semaphore.h>
+#include <sem.h>
 #include <stdint.h>
 
 typedef struct {

@@ -1,5 +1,4 @@
 #include <game_sync.h>
-#include <sem.h>
 
 void game_sync_init(game_sync_t *game_sync, uint32_t n_players) {
   game_sync->read_count = 0;
