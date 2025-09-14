@@ -37,6 +37,7 @@ game_t game_init(args_t *args, const char **err) {
   if (!game->state) {
     if (err)
       *err = "Failed to map shared memory /game_state";
+    free(game);
     return NULL;
   }
 
@@ -45,6 +46,7 @@ game_t game_init(args_t *args, const char **err) {
   if (!game->sync) {
     if (err)
       *err = "Failed to map shared memory /game_sync";
+    free(game);
     return NULL;
   }
 
@@ -65,13 +67,17 @@ game_t game_connect(uint32_t width, uint32_t height) {
 
   game->state_size = get_game_state_size(width, height);
   game->state = shm_open_and_map("/game_state", SHM_READ, game->state_size);
-  if (!game->state)
+  if (!game->state) {
+    free(game);
     return NULL;
+  }
 
   game->sync =
       shm_open_and_map("/game_sync", SHM_READ_WRITE, sizeof(game_sync_t));
-  if (!game->sync)
+  if (!game->sync) {
+    free(game);
     return NULL;
+  }
 
   return game;
 }
@@ -94,7 +100,7 @@ void game_disconnect(game_t game) {
  * This should be called last, obviously
  */
 void game_destroy(game_t game) {
-  game_sync_free(game->sync, game->state->n_players);
+  game_sync_destroy(game->sync, game->state->n_players);
   game_disconnect(game);
 }
 
