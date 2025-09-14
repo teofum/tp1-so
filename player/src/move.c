@@ -206,8 +206,7 @@ int bfs_area_or_player(int x, int y, game_state_t *game_state, int player_idx) {
   int2_t start = {.x = x, .y = y};
 
   int size = game_state->board_width * game_state->board_height;
-  int *visited = (int *)calloc(
-      size, sizeof(int)); // TODO: esto podria estar en un mejor lugar
+  int *visited = (int *)calloc(size, sizeof(int));
   if (!visited) {
     return -1; // Handle allocation failure
   }
@@ -218,10 +217,9 @@ int bfs_area_or_player(int x, int y, game_state_t *game_state, int player_idx) {
   queue_init(&q);
   queue_enqueue(&q, start); // Add start
   int2_t pivot;
-  while (queue_dequeue(&q, &pivot)) { // dequeue4 to set the pivot
-
+  while (queue_dequeue(&q, &pivot)) {
     for (char angle = 0; angle < 8; ++angle) {
-      // look around the pivot and enqueue4 valid
+      // look around the pivot and enqueue valid
       int2_t curr = {.x = pivot.x + dx(angle), .y = pivot.y + dy(angle)};
       int currIndex = curr.x + (curr.y * game_state->board_width);
 
@@ -232,7 +230,8 @@ int bfs_area_or_player(int x, int y, game_state_t *game_state, int player_idx) {
           return 0;
         }
       }
-      if (check_bounds(curr.x, curr.y, game_state) && !visited[currIndex]) {
+
+      if (available(curr.x, curr.y, game_state) && !visited[currIndex]) {
         queue_enqueue(&q, curr);
         visited[currIndex] = 1;
         ++area;
