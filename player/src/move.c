@@ -1,5 +1,4 @@
 #include <move.h>
-#include <queue.h>
 #include <stdlib.h>
 #include <utils.h>
 
@@ -47,7 +46,7 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
 /* ==========================================================================
  * Wall-following functions
  * ========================================================================== */
-#if defined STRAT_WALL || defined STRAT_MIXED
+#ifdef STRAT_WALL
 
 #ifdef WALL_L
 
@@ -97,7 +96,7 @@ static char wallhug(game_state_t *game_state, int player_idx, char prev) {
 /* ==========================================================================
  * Greedy strategies
  * ========================================================================== */
-#if defined STRAT_GREEDY || defined STRAT_MIXED
+#ifdef STRAT_GREEDY
 
 /* ==========================================================================
  * Greedy algorithm scoring functions
@@ -280,72 +279,6 @@ static char calculate_move(game_state_t *gs, int x, int y) {
 
 #endif
 
-#ifdef STRAT_MIXED
-
-/**
- * BFS from (x, y).
- * - If any OTHER player is found on a checked tile => return 0.
- * - Otherwise return the number of passable (>0) tiles visited (area).
- */
-int bfs_area_or_player(int x, int y, game_state_t *game_state, int player_idx) {
-  int2_t start = {.x = x, .y = y};
-
-  int size = game_state->board_width * game_state->board_height;
-  int *visited = (int *)calloc(size, sizeof(int));
-  if (!visited) {
-    return -1; // Handle allocation failure
-  }
-
-  int area = 0;
-
-  queue_t q;
-  queue_init(&q);
-  queue_enqueue(&q, start); // Add start
-  int2_t pivot;
-  while (queue_dequeue(&q, &pivot)) {
-    for (char angle = 0; angle < 8; ++angle) {
-      // look around the pivot and enqueue valid
-      int2_t curr = {.x = pivot.x + dx(angle), .y = pivot.y + dy(angle)};
-      int currIndex = curr.x + (curr.y * game_state->board_width);
-
-      for (int i = 0; i < game_state->n_players; i++) {
-        if (i != player_idx && game_state->players[i].x == curr.x &&
-            game_state->players[i].y == curr.y) {
-          free(visited);
-          return 0;
-        }
-      }
-
-      if (available(curr.x, curr.y, game_state) && !visited[currIndex]) {
-        queue_enqueue(&q, curr);
-        visited[currIndex] = 1;
-        ++area;
-      }
-    }
-  }
-
-  free(visited);
-  return area; // 0 means either found a player OR no passable tiles reachable
-}
-
-/*
- * Mixed strategy move function
- */
-char get_next_move(game_state_t *game_state, int player_idx, char prev) {
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  if (bfs_area_or_player(x, y, game_state, player_idx)) {
-    // esta solo
-    return wallhug(game_state, player_idx, prev);
-  } else {
-    // si hay un player
-    return calculate_move(game_state, x, y);
-  }
-}
-
-#else
-
 /*
  * Universal next move function for all greedy strats.
  */
@@ -358,10 +291,8 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
 
 #endif
 
-#endif
-
 /* ==========================================================================
- * Wall-following functions
+ * Wall-following strategy
  * ========================================================================== */
 #if defined STRAT_WALL
 

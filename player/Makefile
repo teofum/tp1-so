@@ -7,7 +7,7 @@ INCLUDES=../lib/include
 SOURCES=$(wildcard src/*.c)
 OBJECTS=$(foreach I,$(SOURCES:.c=.o),build/$(notdir $I))
 
-all: out/pblind out/pnaive out/pgreedy out/pgreedy_box out/pgreedy_w out/pgreedy_wl out/psgreedy out/psgreedy_box out/psgreedy_w out/psgreedy_wl out/pmixed_box out/pwall
+all: out/pblind out/pnaive out/pgreedy out/pgreedy_box out/pgreedy_w out/pgreedy_wl out/psgreedy out/psgreedy_box out/psgreedy_w out/psgreedy_wl out/pwall
 
 # "Blind" strategy
 out/pblind: GCCFLAGS += -DSTRAT_BLIND
@@ -68,12 +68,6 @@ out/psgreedy_wl: GCCFLAGS += -DSTRAT_GREEDY -DGREEDY_STOCHASTIC -DGREEDY_VALUE_W
 out/psgreedy_wl: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
 	$(GCC) -o out/psgreedy_wl $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
-
-# "Mixed" strategy + box scoring
-out/pmixed_box: GCCFLAGS += -DSTRAT_MIXED -DGREEDY_VALUE_BOX -DWALL_L
-out/pmixed_box: out build $(OBJECTS) $(STATICLIBS)
-	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/pmixed_box $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 # "Wallhug" strategy
 out/pwall: GCCFLAGS += -DSTRAT_WALL -DWALL_L

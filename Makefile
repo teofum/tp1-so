@@ -22,7 +22,6 @@ player: out docker out/chompchamps.a
 	ln player/out/psgreedy_box out/psgreedy_box
 	ln player/out/psgreedy_w out/psgreedy_w
 	ln player/out/psgreedy_wl out/psgreedy_wl
-	ln player/out/pmixed_box out/pmixed_box
 	ln player/out/pwall out/pwall
 
 view: out docker out/chompchamps.a
