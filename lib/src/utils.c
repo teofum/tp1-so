@@ -23,4 +23,3 @@ int check_bounds(int x, int y, game_state_t *gs) {
 int available(int x, int y, game_state_t *gs) {
   return check_bounds(x, y, gs) && gs->board[x + y * gs->board_width] > 0;
 }
-
