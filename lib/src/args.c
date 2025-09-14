@@ -9,6 +9,9 @@ extern char *optarg;
 
 args_t *parse_args(int argc, char *const *argv, const char **err) {
   args_t *args = malloc(sizeof(args_t));
+  if (!args) {
+    return NULL;
+  }
 
   // Initialize default args
   args->width = args->height = 10;
@@ -29,6 +32,7 @@ args_t *parse_args(int argc, char *const *argv, const char **err) {
       if (w < 10) {
         if (err)
           *err = "Board width must be at least 10";
+        free(args);
         return NULL;
       }
       args->width = w;
@@ -39,6 +43,7 @@ args_t *parse_args(int argc, char *const *argv, const char **err) {
       if (h < 10) {
         if (err)
           *err = "Board height must be at least 10";
+        free(args);
         return NULL;
       }
       args->height = h;
@@ -49,6 +54,7 @@ args_t *parse_args(int argc, char *const *argv, const char **err) {
       if (d < 0) {
         if (err)
           *err = "Delay must be a non negative integer";
+        free(args);
         return NULL;
       }
       args->delay = d;
@@ -59,6 +65,7 @@ args_t *parse_args(int argc, char *const *argv, const char **err) {
       if (t <= 0) {
         if (err)
           *err = "Timeout must be a positive integer";
+        free(args);
         return NULL;
       }
       args->timeout = t;
@@ -80,6 +87,9 @@ args_t *parse_args(int argc, char *const *argv, const char **err) {
         if (i == MAX_PLAYERS) {
           if (err)
             *err = "Too many players";
+          for (int i = 0; i < MAX_PLAYERS; i++)
+            free((void *)args->players[i]);
+          free(args);
           return NULL;
         }
         args->players[i++] = strdup(argv[optind++]);
@@ -92,6 +102,7 @@ args_t *parse_args(int argc, char *const *argv, const char **err) {
   if (args->players[0] == NULL) {
     if (err)
       *err = "No players";
+    free(args);
     return NULL;
   }
 
