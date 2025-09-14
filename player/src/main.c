@@ -45,8 +45,7 @@ int main(int argc, char **argv) {
       player_idx = i;
   }
 
-  // player flags n stuff / para el WallHug
-  char next_move = 0;
+  char next_move = -1;
   game_state_t *local_state = malloc(game_state_size(game));
 
   srand(player_idx);

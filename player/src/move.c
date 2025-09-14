@@ -331,26 +331,36 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
 #if defined STRAT_WALL
 
 char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
+  static int hit_wall = 0;
+
+  int x = game_state->players[player_idx].x;
+  int y = game_state->players[player_idx].y;
+
+  if (last_move < 0) {
+    // First move: pick the direction with the shortest path to a map edge
+    int bw = game_state->board_width;
+    int bh = game_state->board_height;
+
+    int dx = x < bw / 2 ? -1 : 1;
+    int dy = y < bh / 2 ? -1 : 1;
+
+    int min_dist_x = dx < 0 ? x : bw - x - 1;
+    int min_dist_y = dy < 0 ? y : bh - y - 1;
+
+    return min_dist_x < min_dist_y ? to_move(dx, 0) : to_move(0, dy);
+  }
+
+  // Keep moving in the initial direction until we hit a wall
+  if (!hit_wall) {
+    if (available(x + dx(last_move), y + dy(last_move), game_state)) {
+      return last_move;
+    } else {
+      hit_wall = 1;
+    }
+  }
+
+  // After a wall hit, stay close to the wall
   return wallhug(game_state, player_idx, last_move);
 }
 
 #endif
-
-// TODO these
-
-// // Si usamos el walk antes y gira contra una pared es menos probable que deje
-// // espacios
-//
-// // Sigue derecho hasta toparse con una pared
-// char walk(game_state_t *game_state, int player_idx, char prev, char *start) {
-//   int x = game_state->players[player_idx].x;
-//   int y = game_state->players[player_idx].y;
-//
-//   if (check_bounds(x + dx(prev), y + dy(prev), game_state)) {
-//     return prev;
-//   } else {
-//     *start = 0;
-//     return -1; // TODO: cuando se implementa puede llamar al prowimo
-//     movimiento
-//   }
-// }
