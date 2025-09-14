@@ -45,6 +45,56 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
 #endif
 
 /* ==========================================================================
+ * Wall-following functions
+ * ========================================================================== */
+#if defined STRAT_WALL || defined STRAT_MIXED
+
+#ifdef WALL_L
+
+static char wallhug(game_state_t *game_state, int player_idx, char prev) {
+  int x = game_state->players[player_idx].x;
+  int y = game_state->players[player_idx].y;
+
+  char check = (prev + 6) % 8;
+  if (available(x + dx(check), y + dy(check), game_state))
+    return check;
+
+  for (char next = prev; next < prev + 8; ++next) {
+    char move = next % 8;
+    if (available(x + dx(move), y + dy(move), game_state)) {
+      return move;
+    }
+  }
+
+  return -1;
+}
+
+#else
+
+static char wallhug(game_state_t *game_state, int player_idx, char prev) {
+  int x = game_state->players[player_idx].x;
+  int y = game_state->players[player_idx].y;
+
+  prev += 2 * 8;
+  char check = (prev + 2) % 8;
+  if (available(x + dx(check), y + dy(check), game_state))
+    return check;
+
+  for (char next = prev; next > (prev - 8); --next) {
+    char move = next % 8;
+    if (available(x + dx(move), y + dy(move), game_state)) {
+      return move;
+    }
+  }
+
+  return -1;
+}
+
+#endif
+
+#endif
+
+/* ==========================================================================
  * Greedy strategies
  * ========================================================================== */
 #if defined STRAT_GREEDY || defined STRAT_MIXED
@@ -243,23 +293,6 @@ int bfs_area_or_player(int x, int y, game_state_t *game_state, int player_idx) {
   return area; // 0 means either found a player OR no passable tiles reachable
 }
 
-char wallhug(game_state_t *game_state, int player_idx, char prev) {
-  int x = game_state->players[player_idx].x;
-  int y = game_state->players[player_idx].y;
-
-  char check = (prev + 6) % 8;
-  if (available(x + dx(check), y + dy(check), game_state)) {
-    return check;
-  } else {
-    for (char next = prev; next < prev + 8; ++next) {
-      if (available(x + dx((next) % 8), y + dy((next) % 8), game_state)) {
-        return (next) % 8;
-      }
-    }
-  }
-  return -1;
-}
-
 /*
  * Mixed strategy move function
  */
@@ -292,29 +325,21 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
 
 #endif
 
+/* ==========================================================================
+ * Wall-following functions
+ * ========================================================================== */
+#if defined STRAT_WALL
+
+char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
+  return wallhug(game_state, player_idx, last_move);
+}
+
+#endif
+
 // TODO these
 
 // // Si usamos el walk antes y gira contra una pared es menos probable que deje
 // // espacios
-// char get_next_move_WallHug_R(game_state_t *game_state, int player_idx,
-//                              char prev) {
-//   int x = game_state->players[player_idx].x;
-//   int y = game_state->players[player_idx].y;
-//
-//   prev += 2 * 8; // padding to stay positive :)
-//
-//   char check = (prev + 2) % 8; // char check = (prev+1)%8; //puede funcionar
-//   if (check_bounds(x + dx(check), y + dy(check), game_state)) {
-//     return check;
-//   } else {
-//     for (char next = prev; next > (prev - 8); --next) {
-//       if (check_bounds(x + dx((next) % 8), y + dy((next) % 8), game_state)) {
-//         return (next) % 8;
-//       }
-//     }
-//   }
-//   return -1;
-// }
 //
 // // Sigue derecho hasta toparse con una pared
 // char walk(game_state_t *game_state, int player_idx, char prev, char *start) {
