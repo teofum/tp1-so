@@ -1,12 +1,12 @@
 all: master player view
 
-master: out docker out/chompchamps.a
-	docker exec -it so-builder make all -C /root/master
+master: out out/chompchamps.a
+	make all -C /root/master
 	rm -f out/master
 	ln master/out/master out/master
 
-player: out docker out/chompchamps.a
-	docker exec -it so-builder make all -C /root/player
+player: out out/chompchamps.a
+	make all -C /root/player
 	rm -f out/p*
 	ln player/out/pblind out/pblind
 	ln player/out/pnaive out/pnaive
@@ -20,13 +20,13 @@ player: out docker out/chompchamps.a
 	ln player/out/psgreedy_wl out/psgreedy_wl
 	ln player/out/pwall out/pwall
 
-view: out docker out/chompchamps.a
-	docker exec -it so-builder make all -C /root/view
+view: out out/chompchamps.a
+	make all -C /root/view
 	rm -f out/view
 	ln view/out/view out/view
 
-out/chompchamps.a: out docker
-	docker exec -it so-builder make all -C /root/lib
+out/chompchamps.a: out
+	make all -C /root/lib
 	rm -f out/chompchamps.a
 	ln lib/out/chompchamps.a out/chompchamps.a
 
@@ -41,8 +41,11 @@ clean:
 	rm -rf out
 
 clean_shm:
-	docker exec -it so-builder rm -f /dev/shm/game_state
-	docker exec -it so-builder rm -f /dev/shm/game_sync
+	rm -f /dev/shm/game_state
+	rm -f /dev/shm/game_sync
+
+remote: docker
+	docker exec -w /root -it so-builder make
 
 docker:
 	docker start so-builder
@@ -50,6 +53,6 @@ docker:
 docker_pull:
 	docker pull agodio/itba-so-multi-platform:3.0
 	docker run -d -v "${PWD}:/root" --security-opt seccomp:unconfined -it --name so-builder --platform=linux/amd64 --privileged agodio/itba-so-multi-platform:3.0
-	docker exec -it so-builder apt install libncurses-dev
+	apt install libncurses-dev
 
 .PHONY: master master_demo player view
