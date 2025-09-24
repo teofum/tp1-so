@@ -31,3 +31,5 @@ make clean
 ```
 
 El script `run_master.sh` ejecuta master en el container de docker.
+
+ej: ./run_master.sh -p ./pgreedy_box ./pgreedy_box -v "./view"
