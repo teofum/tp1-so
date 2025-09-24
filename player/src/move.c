@@ -1,6 +1,7 @@
 #include <move.h>
 #include <stdlib.h>
 #include <utils.h>
+#include "queue.h"
 
 /* ==========================================================================
  * Simple/Naive strategies
@@ -337,8 +338,53 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
 #ifdef STRAT_BLOCKER
 
 /*
- * "Blocker" strategy scoring function
- * Finds the adjacent cell that gets closest to the nearest opponent.
+ * BFS to find shortest distance to target opponent.
+ * Returns the minimum number of moves needed to reach target position.
+ */
+static int bfs_distance(game_state_t *gs, int x, int y, int target_x, int target_y) {
+  if (x == target_x && y == target_y)
+    return 0;
+
+  int size = gs->board_width * gs->board_height;
+  int *visited = calloc(size, sizeof(int));
+  if (!visited)
+    return 1000;
+
+  queue_t q;
+  queue_init(&q);
+  queue_enqueue(&q, (int2_t){x, y});
+  visited[x + y * gs->board_width] = 1;
+
+  int dist = 0;
+  int2_t curr;
+  while (queue_dequeue(&q, &curr)) {
+    dist++;
+
+    for (int d = 0; d < 8; ++d) {
+      int nx = curr.x + dx(d);
+      int ny = curr.y + dy(d);
+      int idx = nx + ny * gs->board_width;
+
+      if (nx == target_x && ny == target_y) {
+        free(visited);
+        return dist;
+      }
+
+      if (available(nx, ny, gs) && !visited[idx]) {
+        queue_enqueue(&q, (int2_t){nx, ny});
+        visited[idx] = 1;
+      }
+    }
+  }
+
+  free(visited);
+  return 1000;
+}
+
+/*
+ * "Blocker" strategy value function
+ * A blocking algorithm. Finds the adjacent cell that minimizes distance to
+ * the nearest opponent using BFS pathfinding.
  * This scoring function assumes input is in bounds and available.
  */
 static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
@@ -346,9 +392,9 @@ static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
 
   for (int i = 0; i < gs->n_players; ++i) {
     if (i != player_idx && !gs->players[i].blocked) {
-      int px = gs->players[i].x;
-      int py = gs->players[i].y;
-      int dist = abs(x - px) > abs(y - py) ? abs(x - px) : abs(y - py);
+      int opponent_x = gs->players[i].x;
+      int opponent_y = gs->players[i].y;
+      int dist = bfs_distance(gs, x, y, opponent_x, opponent_y);
       if (dist < min_dist)
         min_dist = dist;
     }
@@ -358,7 +404,7 @@ static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
   if (min_dist == 1000)
     return gs->board[x + y * gs->board_width];
 
-  return 1000 - min_dist; // Higher score for closer distance
+  return 1000 - min_dist;
 }
 
 /*
