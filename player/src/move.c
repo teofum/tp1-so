@@ -330,3 +330,66 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
 }
 
 #endif
+
+/* ==========================================================================
+ * Blocker strategy
+ * ========================================================================== */
+#ifdef STRAT_BLOCKER
+
+/*
+ * "Blocker" strategy scoring function
+ * Finds the adjacent cell that gets closest to the nearest opponent.
+ * This scoring function assumes input is in bounds and available.
+ */
+static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
+  int min_dist = 1000;
+
+  for (int i = 0; i < gs->n_players; ++i) {
+    if (i != player_idx && !gs->players[i].blocked) {
+      int px = gs->players[i].x;
+      int py = gs->players[i].y;
+      int dist = abs(x - px) > abs(y - py) ? abs(x - px) : abs(y - py);
+      if (dist < min_dist)
+        min_dist = dist;
+    }
+  }
+
+  // No opponents found, use greedy behavior
+  if (min_dist == 1000)
+    return gs->board[x + y * gs->board_width];
+
+  return 1000 - min_dist; // Higher score for closer distance
+}
+
+/*
+ * Move function for blocker strat. Returns the direction towards the closest
+ * opponent to block their movement options.
+ * Returns -1 (kills itself) if all neighbors are occupied.
+ */
+static char calculate_move(game_state_t *gs, int x, int y, int player_idx) {
+  char move = -1;
+  int max_value = -1;
+
+  for (int dy = -1; dy <= 1; ++dy) {
+    for (int dx = -1; dx <= 1; ++dx) {
+      if ((dx != 0 || dy != 0) && available(x + dx, y + dy, gs)) {
+        int value = scoring_fn(gs, x + dx, y + dy, player_idx);
+        if (value > max_value) {
+          move = to_move(dx, dy);
+          max_value = value;
+        }
+      }
+    }
+  }
+
+  return move;
+}
+
+char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
+  int x = game_state->players[player_idx].x;
+  int y = game_state->players[player_idx].y;
+
+  return calculate_move(game_state, x, y, player_idx);
+}
+
+#endif

@@ -7,7 +7,7 @@ INCLUDES=../lib/include
 SOURCES=$(wildcard src/*.c)
 OBJECTS=$(foreach I,$(SOURCES:.c=.o),build/$(notdir $I))
 
-all: out/pblind out/pnaive out/pgreedy out/pgreedy_box out/pgreedy_w out/pgreedy_wl out/psgreedy out/psgreedy_box out/psgreedy_w out/psgreedy_wl out/pwall
+all: out/pblind out/pnaive out/pgreedy out/pgreedy_box out/pgreedy_w out/pgreedy_wl out/psgreedy out/psgreedy_box out/psgreedy_w out/psgreedy_wl out/pwall out/pblocker
 
 # "Blind" strategy
 out/pblind: GCCFLAGS += -DSTRAT_BLIND
@@ -73,7 +73,13 @@ out/psgreedy_wl: out build $(OBJECTS) $(STATICLIBS)
 out/pwall: GCCFLAGS += -DSTRAT_WALL -DWALL_L
 out/pwall: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
-	$(GCC) -o out/pwall $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
+	$(GCC) -o out/pwall $(OBJECTS) $(STATICLIBS) $(LDFLAGS)
+
+# "Blocker" strategy - focuses on blocking other players
+out/pblocker: GCCFLAGS += -DSTRAT_BLOCKER
+out/pblocker: out build $(OBJECTS) $(STATICLIBS)
+	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
+	$(GCC) -o out/pblocker $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
 
 build/%.o: src/%.c
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c $< -o $@
