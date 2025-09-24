@@ -1,7 +1,7 @@
 #include <move.h>
 #include <stdlib.h>
 #include <utils.h>
-#include "queue.h"
+#include <queue.h>
 
 /* ==========================================================================
  * Simple/Naive strategies
