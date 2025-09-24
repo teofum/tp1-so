@@ -76,7 +76,7 @@ out/pwall: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) -o out/pwall $(OBJECTS) $(STATICLIBS) $(LDFLAGS)
 
 # "Blocker" strategy - focuses on blocking other players
-out/pblocker: GCCFLAGS += -DSTRAT_BLOCKER
+out/pblocker: GCCFLAGS += -DSTRAT_GREEDY -DSTRAT_BLOCKER
 out/pblocker: out build $(OBJECTS) $(STATICLIBS)
 	$(GCC) $(GCCFLAGS) -I./include $(foreach x,$(INCLUDES),-I$x) -c src/move.c -o build/move.o # recompile move
 	$(GCC) -o out/pblocker $(OBJECTS) $(STATICLIBS) $(LDFLAGS) 
