@@ -1,6 +1,7 @@
 #include <move.h>
 #include <stdlib.h>
 #include <utils.h>
+#include <queue.h>
 
 /* ==========================================================================
  * Simple/Naive strategies
@@ -110,7 +111,8 @@ static char wallhug(game_state_t *game_state, int player_idx, char prev) {
  * higher.
  * This scoring function assumes input is in bounds and available.
  */
-static int scoring_fn(game_state_t *gs, int x, int y) {
+static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
+  (void)player_idx; // Unused parameter
   // Define Gaussian kernel
   static int kernel[3][3] = {{1, 4, 7}, {4, 16, 26}, {7, 26, 41}};
 
@@ -144,7 +146,8 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
  * higher.
  * This scoring function assumes input is in bounds and available.
  */
-static int scoring_fn(game_state_t *gs, int x, int y) {
+static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
+  (void)player_idx; // Unused parameter
   // Define Gaussian kernel
   static int kernel[3][3] = {{1, 2, 1}, {2, 4, 2}, {1, 2, 1}};
 
@@ -177,7 +180,8 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
  * cell for the one with the highest sum value.
  * This scoring function assumes input is in bounds and available.
  */
-static int scoring_fn(game_state_t *gs, int x, int y) {
+static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
+  (void)player_idx; // Unused parameter
   int sum = 0;
   int blocked = 0;
 
@@ -198,6 +202,81 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
 }
 
 #else
+#ifdef STRAT_BLOCKER
+
+#define MAX_DISTANCE 1000
+
+/*
+ * BFS to find shortest distance to target opponent.
+ * Returns the minimum number of moves needed to reach target position.
+ */
+static int bfs_distance(game_state_t *gs, int x, int y, int target_x, int target_y) {
+  if (x == target_x && y == target_y)
+    return 0;
+
+  int size = gs->board_width * gs->board_height;
+  int *visited = calloc(size, sizeof(int));
+  if (!visited)
+    return MAX_DISTANCE;
+
+  queue_t q;
+  queue_init(&q);
+  queue_enqueue(&q, (int2_t){x, y});
+  visited[x + y * gs->board_width] = 1;
+
+  int dist = 0;
+  int2_t curr;
+  while (queue_dequeue(&q, &curr)) {
+    dist++;
+
+    for (int d = 0; d < 8; ++d) {
+      int nx = curr.x + dx(d);
+      int ny = curr.y + dy(d);
+      int idx = nx + ny * gs->board_width;
+
+      if (nx == target_x && ny == target_y) {
+        free(visited);
+        return dist;
+      }
+
+      if (available(nx, ny, gs) && !visited[idx]) {
+        queue_enqueue(&q, (int2_t){nx, ny});
+        visited[idx] = 1;
+      }
+    }
+  }
+
+  free(visited);
+  return MAX_DISTANCE;
+}
+
+/*
+ * "Blocker" strategy value function
+ * A blocking algorithm. Finds the adjacent cell that minimizes distance to
+ * the nearest opponent using BFS pathfinding.
+ * This scoring function assumes input is in bounds and available.
+ */
+static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
+  int min_dist = MAX_DISTANCE;
+
+  for (int i = 0; i < gs->n_players; ++i) {
+    if (i != player_idx && !gs->players[i].blocked) {
+      int opponent_x = gs->players[i].x;
+      int opponent_y = gs->players[i].y;
+      int dist = bfs_distance(gs, x, y, opponent_x, opponent_y);
+      if (dist < min_dist)
+        min_dist = dist;
+    }
+  }
+
+  // No opponents found, use greedy behavior
+  if (min_dist == MAX_DISTANCE)
+    return gs->board[x + y * gs->board_width];
+
+  return MAX_DISTANCE - min_dist;
+}
+
+#else
 
 /*
  * "Greedy" strategy value function
@@ -205,10 +284,12 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
  * and moves there.
  * This scoring function assumes input is in bounds and available.
  */
-static int scoring_fn(game_state_t *gs, int x, int y) {
+static int scoring_fn(game_state_t *gs, int x, int y, int player_idx) {
+  (void)player_idx; // Unused parameter
   return gs->board[x + y * gs->board_width];
 }
 
+#endif
 #endif
 #endif
 #endif
@@ -224,7 +305,7 @@ static int scoring_fn(game_state_t *gs, int x, int y) {
  * by the scoring function.
  * Returns -1 (kills itself) if all neighbors are occupied.
  */
-static char calculate_move(game_state_t *gs, int x, int y) {
+static char calculate_move(game_state_t *gs, int x, int y, int player_idx) {
   int values_cumulative[8]; // Cumulative probability function
   int values_sum = 0;       // Total
 
@@ -232,7 +313,7 @@ static char calculate_move(game_state_t *gs, int x, int y) {
     int value = 0;
 
     if (available(x + dx(m), y + dy(m), gs)) {
-      value = scoring_fn(gs, x + dx(m), y + dy(m));
+      value = scoring_fn(gs, x + dx(m), y + dy(m), player_idx);
     }
 
     values_cumulative[m] = values_sum + value;
@@ -258,14 +339,14 @@ static char calculate_move(game_state_t *gs, int x, int y) {
  * valuable adjacent cell given a scoring function.
  * Returns -1 (kills itself) if all neighbors are occupied.
  */
-static char calculate_move(game_state_t *gs, int x, int y) {
+static char calculate_move(game_state_t *gs, int x, int y, int player_idx) {
   char move = -1;
   int max_value = -1;
 
   for (int dy = -1; dy <= 1; ++dy) {
     for (int dx = -1; dx <= 1; ++dx) {
       if ((dx != 0 || dy != 0) && available(x + dx, y + dy, gs)) {
-        int value = scoring_fn(gs, x + dx, y + dy);
+        int value = scoring_fn(gs, x + dx, y + dy, player_idx);
         if (value > max_value) {
           move = to_move(dx, dy);
           max_value = value;
@@ -286,7 +367,7 @@ char get_next_move(game_state_t *game_state, int player_idx, char last_move) {
   int x = game_state->players[player_idx].x;
   int y = game_state->players[player_idx].y;
 
-  return calculate_move(game_state, x, y);
+  return calculate_move(game_state, x, y, player_idx);
 }
 
 #endif

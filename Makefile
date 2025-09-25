@@ -19,6 +19,7 @@ player: out out/chompchamps.a
 	ln player/out/psgreedy_w out/psgreedy_w
 	ln player/out/psgreedy_wl out/psgreedy_wl
 	ln player/out/pwall out/pwall
+	ln player/out/pblocker out/pblocker
 
 view: out out/chompchamps.a
 	make all -C /root/view
